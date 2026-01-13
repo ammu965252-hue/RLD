@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Detection Result – RiceGuard AI</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/animations.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/pages.css">
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <div class="container navbar-inner">
+    <a href="index.html" class="logo">🌾 <b>Rice<span class="text-primary">Guard</span></b></a>
+    <div class="nav-links">
+      <a href="index.html">Detect</a>
+      <a href="history.html">History</a>
+      <a href="chatbot.html">Chatbot</a>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="about.html">About</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ANALYZING -->
+<section id="analyzing" class="center-screen">
+  <div class="text-center animate-fade">
+    <div class="loader-circle">🌿</div>
+    <h2>Analyzing Image...</h2>
+    <p class="text-muted">Our AI is examining your rice leaf</p>
+    <div class="progress">
+      <div class="progress-bar"></div>
+    </div>
+  </div>
+</section>
+
+<!-- RESULT -->
+<section id="resultPage" class="hidden">
+  <div class="container">
+
+    <!-- HEADER -->
+    <div class="result-header">
+      <div>
+        <h1>Detection Results</h1>
+        <p class="text-muted">Analysis completed successfully</p>
+      </div>
+      <div class="actions">
+        <button class="btn btn-outline">🔗 Share</button>
+        <button class="btn btn-outline">⬇ Download</button>
+        <a href="index.html" class="btn btn-primary">🔄 New Scan</a>
+      </div>
+    </div>
+
+    <div class="result-grid">
+
+      <!-- LEFT -->
+      <div>
+        <div class="image-grid">
+          <div class="card">
+            <h3>Original Image</h3>
+            <img id="originalImg">
+          </div>
+
+          <div class="card">
+            <h3>Detection Result</h3>
+            <div class="detect-box">
+              <img id="detectImg">
+              <div class="bbox"></div>
+              <span class="label">BLB Detected</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>AI Heatmap</h3>
+          <div class="heatmap">
+            <img id="heatmapImg">
+            <div class="heatmap-bar"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Symptoms Identified</h3>
+          <ul id="symptoms"></ul>
+        </div>
+      </div>
+
+      <!-- RIGHT -->
+      <div>
+        <div class="card severity-card">
+          <h2>Bacterial Leaf Blight</h2>
+          <p class="text-muted">Confidence</p>
+          <div class="progress">
+            <div class="progress-bar" style="width:94.7%"></div>
+          </div>
+          <p class="severity moderate">Moderate</p>
+          <p class="text-muted mt-2">
+            BLB is caused by Xanthomonas oryzae. It appears as yellow lesions.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3>Treatment</h3>
+          <ol id="treatment"></ol>
+        </div>
+
+        <div class="card">
+          <h3>Prevention</h3>
+          <ul id="prevention"></ul>
+        </div>
+
+        <a href="chatbot.html" class="btn btn-primary full-width">
+          Ask Our AI Expert →
+        </a>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<script src="js/result.js"></script>
+</body>
+</html>

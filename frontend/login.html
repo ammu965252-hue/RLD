@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login – RiceGuard AI</title>
+
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/pages.css">
+  <link rel="stylesheet" href="css/animations.css">
+</head>
+
+<body class="auth-body">
+
+<!-- BACKGROUND DECOR -->
+<div class="auth-bg">
+  <div class="blur-circle primary"></div>
+  <div class="blur-circle accent"></div>
+</div>
+
+<!-- ================= LOGIN CARD ================= -->
+<div class="auth-container animate-fade">
+
+  <!-- LOGO -->
+  <div class="auth-logo">
+    🌾 <span>Rice<span class="primary-text">Guard</span></span>
+  </div>
+
+  <div class="card auth-card">
+    <h1>Welcome Back</h1>
+    <p class="text-muted mb-4">Sign in to continue to RiceGuard</p>
+
+    <form id="loginForm">
+
+      <!-- EMAIL -->
+      <label>Email or Phone</label>
+      <input
+        type="text"
+        id="email"
+        class="input"
+        placeholder="Enter your email or phone"
+        required
+      />
+
+      <!-- PASSWORD -->
+      <label>Password</label>
+      <div class="password-field">
+        <input
+          type="password"
+          id="password"
+          class="input"
+          placeholder="Enter your password"
+          required
+        />
+        <button type="button" id="togglePassword">👁</button>
+      </div>
+
+      <!-- REMEMBER -->
+      <div class="checkbox-row">
+        <input type="checkbox" id="remember">
+        <label for="remember">Remember me for 30 days</label>
+      </div>
+
+      <!-- SUBMIT -->
+      <button type="submit" class="btn btn-primary full-width">
+        Sign In →
+      </button>
+    </form>
+
+    <div class="divider">or continue with</div>
+
+    <div class="social-buttons">
+      <button class="btn btn-outline">Google</button>
+      <button class="btn btn-outline">Phone OTP</button>
+    </div>
+  </div>
+
+  <p class="text-muted mt-4">
+    Don’t have an account?
+    <a href="register.html" class="primary-text">Create account</a>
+  </p>
+
+</div>
+
+<script src="js/auth.js"></script>
+</body>
+</html>

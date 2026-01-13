@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Detection History – RiceGuard AI</title>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/pages.css">
+  <link rel="stylesheet" href="css/animations.css">
+</head>
+
+<body>
+
+<!-- ================= NAVBAR ================= -->
+<nav class="navbar">
+  <div class="container navbar-inner">
+    <a href="index.html" class="logo">
+      🌾 <strong>Rice<span style="color:var(--primary)">Guard</span></strong>
+    </a>
+
+    <div class="nav-links">
+      <a href="index.html">Detect</a>
+      <a href="history.html" class="active">History</a>
+      <a href="chatbot.html">Chatbot</a>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="about.html">About</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ================= MAIN CONTENT ================= -->
+<main class="container animate-fade mt-6">
+
+  <!-- HEADER -->
+  <div class="result-header">
+    <div>
+      <h1>Detection History</h1>
+      <p class="text-muted">
+        View and manage your previous rice leaf disease detections
+      </p>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-outline">
+        ⬇ Export
+      </button>
+      <button class="btn btn-outline" id="toggleEmpty">
+        Show Empty
+      </button>
+    </div>
+  </div>
+
+  <!-- FILTERS -->
+  <div class="card mt-4">
+    <div class="filter-row">
+      <input
+        type="text"
+        id="searchInput"
+        class="input"
+        placeholder="Search by disease name..."
+      />
+
+      <select id="severityFilter" class="input">
+        <option value="all">All Severity</option>
+        <option value="None">Healthy</option>
+        <option value="Mild">Mild</option>
+        <option value="Moderate">Moderate</option>
+        <option value="Severe">Severe</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- EMPTY STATE -->
+  <div id="emptyState" class="card text-center mt-6 hidden">
+    <div class="mb-4" style="font-size:48px;">📄</div>
+    <h2>No detections yet</h2>
+    <p class="text-muted mb-4">
+      Start by uploading a rice leaf image to detect diseases.
+      Your history will appear here.
+    </p>
+    <a href="index.html" class="btn btn-primary">
+      Start Detecting
+    </a>
+  </div>
+
+  <!-- TABLE -->
+  <div id="tableWrapper" class="card mt-6">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Image</th>
+          <th>Disease</th>
+          <th>Severity</th>
+          <th>Confidence</th>
+          <th>Date & Time</th>
+          <th style="text-align:right;">Actions</th>
+        </tr>
+      </thead>
+
+      <tbody id="historyTable">
+        <!-- Rows injected by history.js -->
+      </tbody>
+    </table>
+  </div>
+
+</main>
+
+<!-- ================= FOOTER ================= -->
+<footer class="mt-6" style="border-top:1px solid var(--border);">
+  <div class="container text-center text-muted" style="padding:16px;">
+    © 2024 RiceGuard AI – Built for farmers, by innovators 🌱
+  </div>
+</footer>
+
+<!-- JS -->
+<script src="js/main.js"></script>
+<script src="js/history.js"></script>
+
+</body>
+</html>

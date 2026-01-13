@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>RiceGuard AI – Rice Leaf Disease Detection</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/animations.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/pages.css">
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <div class="container navbar-inner">
+    <a href="index.html" class="logo">
+      🌾 <strong>Rice<span style="color:var(--primary)">Guard</span></strong>
+    </a>
+
+    <div class="nav-links">
+      <a href="index.html">Detect</a>
+      <a href="history.html">History</a>
+      <a href="chatbot.html">Chatbot</a>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="about.html">About</a>
+    </div>
+
+    <div>
+      <a href="login.html" class="btn btn-outline">Login</a>
+      <a href="register.html" class="btn btn-primary">Get Started</a>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO SECTION -->
+<section class="hero">
+  <div class="container hero-grid">
+    
+    <!-- LEFT -->
+    <div class="animate-fade">
+      <span class="badge">🌿 AI Powered Detection</span>
+
+      <h1>
+        Protect Your <br>
+        <span class="text-gradient">Rice Crops</span> with AI
+      </h1>
+
+      <p class="text-muted">
+        Upload a rice leaf image and instantly detect diseases,
+        severity, and treatment recommendations.
+      </p>
+
+      <div class="hero-buttons">
+        <button class="btn btn-primary" onclick="openFilePicker()">📤 Upload Image</button>
+        <button class="btn btn-outline">📷 Take Photo</button>
+      </div>
+    </div>
+
+    <!-- RIGHT -->
+    <div class="card upload-card animate-slide">
+      <div 
+        id="uploadZone" 
+        class="upload-zone"
+        onclick="openFilePicker()"
+      >
+        <input type="file" id="fileInput" accept="image/*" hidden>
+
+        <div id="uploadPlaceholder">
+          <div class="upload-icon">⬆️</div>
+          <h3>Drop your image here</h3>
+          <p class="text-muted">or click to browse</p>
+          <small class="text-muted">JPG, PNG, WebP supported</small>
+        </div>
+
+        <div id="previewContainer" class="hidden">
+          <img id="previewImage" alt="Preview">
+          <button class="remove-btn" onclick="removeImage(event)">✖</button>
+        </div>
+      </div>
+
+      <button 
+        id="detectBtn"
+        class="btn btn-primary hidden mt-4"
+        onclick="detectDisease()"
+      >
+        Detect Disease →
+      </button>
+    </div>
+
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how-it-works">
+  <div class="container text-center">
+    <h2>How It Works</h2>
+    <p class="text-muted">Fast, accurate, farmer-friendly AI detection</p>
+
+    <div class="features-grid">
+      <div class="card">
+        🔍 <h3>AI Detection</h3>
+        <p class="text-muted">Deep learning trained on 50,000+ images</p>
+      </div>
+      <div class="card">
+        🛡️ <h3>Early Prevention</h3>
+        <p class="text-muted">Detect diseases before crop loss</p>
+      </div>
+      <div class="card">
+        ⚡ <h3>Fast Results</h3>
+        <p class="text-muted">Diagnosis in seconds</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<section class="stats">
+  <div class="container stats-grid">
+    <div><h2>50K+</h2><p>Scans</p></div>
+    <div><h2>95%</h2><p>Accuracy</p></div>
+    <div><h2>12</h2><p>Diseases</p></div>
+    <div><h2>10K+</h2><p>Farmers</p></div>
+  </div>
+</section>
+
+<script src="js/main.js"></script>
+<script src="js/upload.js"></script>
+</body>
+</html>

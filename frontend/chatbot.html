@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Farming Assistant – RiceGuard</title>
+
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/pages.css">
+  <link rel="stylesheet" href="css/animations.css">
+</head>
+
+<body>
+
+<!-- ================= NAVBAR ================= -->
+<nav class="navbar">
+  <div class="container navbar-inner">
+    <a href="index.html">
+      🌾 <strong>Rice<span style="color:var(--primary)">Guard</span></strong>
+    </a>
+    <div class="nav-links">
+      <a href="index.html">Detect</a>
+      <a href="history.html">History</a>
+      <a href="chatbot.html" class="active">Chatbot</a>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="about.html">About</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ================= MAIN ================= -->
+<main class="container mt-6 animate-fade">
+
+  <!-- HEADER -->
+  <div class="text-center mb-6">
+    <div class="chatbot-icon">🤖</div>
+    <h1>Farming Assistant</h1>
+    <p class="text-muted">
+      Ask anything about rice diseases, farming & treatments
+    </p>
+  </div>
+
+  <!-- CHAT CARD -->
+  <div class="card chat-card">
+
+    <!-- CHAT BODY -->
+    <div id="chatBody" class="chat-body">
+      <!-- Messages injected here -->
+    </div>
+
+    <!-- QUICK QUESTIONS -->
+    <div class="quick-questions">
+      <span class="text-muted">✨ Quick questions:</span>
+      <button onclick="quickAsk('What is Bacterial Leaf Blight?')">What is BLB?</button>
+      <button onclick="quickAsk('How to prevent rice diseases?')">Prevention</button>
+      <button onclick="quickAsk('Best fertilizers for rice?')">Fertilizers</button>
+      <button onclick="quickAsk('When to harvest rice?')">Harvest</button>
+    </div>
+
+    <!-- INPUT -->
+    <div class="chat-input">
+      <input
+        type="text"
+        id="chatInput"
+        placeholder="Type your message..."
+        onkeypress="if(event.key==='Enter') sendMessage()"
+      />
+      <button class="btn btn-primary" onclick="sendMessage()">Send</button>
+    </div>
+
+  </div>
+
+</main>
+
+<script src="js/chatbot.js"></script>
+</body>
+</html>
