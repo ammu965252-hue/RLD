@@ -4,13 +4,19 @@ const previewImage = document.getElementById("previewImage");
 const uploadPlaceholder = document.getElementById("uploadPlaceholder");
 const detectBtn = document.getElementById("detectBtn");
 
+let selectedFile = null;
+
+// Open file picker
 function openFilePicker() {
   fileInput.click();
 }
 
+// Handle file selection
 fileInput.addEventListener("change", () => {
   const file = fileInput.files[0];
   if (!file || !file.type.startsWith("image/")) return;
+
+  selectedFile = file;
 
   const reader = new FileReader();
   reader.onload = () => {
@@ -18,20 +24,56 @@ fileInput.addEventListener("change", () => {
     previewContainer.classList.remove("hidden");
     uploadPlaceholder.classList.add("hidden");
     detectBtn.classList.remove("hidden");
-    localStorage.setItem("uploadedImage", reader.result);
   };
   reader.readAsDataURL(file);
 });
 
+// Remove selected image
 function removeImage(e) {
   e.stopPropagation();
   previewImage.src = "";
   previewContainer.classList.add("hidden");
   uploadPlaceholder.classList.remove("hidden");
   detectBtn.classList.add("hidden");
-  localStorage.removeItem("uploadedImage");
+  selectedFile = null;
 }
 
-function detectDisease() {
-  window.location.href = "result.html";
+// 🔥 REAL DISEASE DETECTION
+async function detectDisease() {
+  if (!selectedFile) {
+    alert("Please upload an image first");
+    return;
+  }
+
+  detectBtn.innerText = "Detecting...";
+  detectBtn.disabled = true;
+
+  const formData = new FormData();
+  formData.append("file", selectedFile);
+
+  try {
+    const response = await fetch("http://127.0.0.1:8000/detect", {
+      method: "POST",
+      body: formData
+    });
+
+    if (!response.ok) {
+      throw new Error("Server error");
+    }
+
+    const result = await response.json();
+
+    // ✅ Save REAL model output
+    localStorage.setItem("riceguard_result", JSON.stringify(result));
+
+    // Redirect to result page
+    window.location.href = "result.html";
+
+  } catch (error) {
+    alert("Error detecting disease. Please try again.");
+    console.error(error);
+  } finally {
+    detectBtn.innerText = "Detect Disease";
+    detectBtn.disabled = false;
+  }
 }

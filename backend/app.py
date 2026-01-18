@@ -1,26 +1,48 @@
-"""
-Rice Leaf Disease Detection Web Application
-A deep learning application for detecting diseases in rice leaves
-"""
-
-from flask import Flask, request, jsonify
+from fastapi import FastAPI, File, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+import shutil
 import os
 
-app = Flask(__name__)
+from utils.predict import predict_disease
 
-# Configuration
-UPLOAD_FOLDER = 'uploads'
-OUTPUT_FOLDER = 'outputs'
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.config['OUTPUT_FOLDER'] = OUTPUT_FOLDER
+app = FastAPI(title="RiceGuard AI Backend")
 
-# Ensure folders exist
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-os.makedirs(OUTPUT_FOLDER, exist_ok=True)
+# CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-@app.route('/', methods=['GET'])
-def home():
-    return jsonify({'message': 'Rice Leaf Disease Detection API'})
+# Upload directory
+UPLOAD_DIR = "uploads"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
 
-if __name__ == '__main__':
-    app.run(debug=True)
+# Serve uploaded + result images
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+
+
+@app.post("/detect")
+async def detect_disease(file: UploadFile = File(...)):
+
+    # Validate file type
+    if not file.content_type.startswith("image/"):
+        return {"error": "Invalid file type. Please upload an image."}
+
+    # Save uploaded image
+    file_path = os.path.join(UPLOAD_DIR, file.filename)
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+
+    # Run prediction
+    try:
+        result = predict_disease(file_path)
+    except Exception as e:
+        return {"error": f"Prediction failed: {str(e)}"}
+
+    # OPTIONAL: include original image path (clean & consistent)
+    result["original_image"] = f"/uploads/{file.filename}"
+
+    return result

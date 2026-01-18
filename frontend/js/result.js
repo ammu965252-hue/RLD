@@ -1,53 +1,71 @@
 const analyzing = document.getElementById("analyzing");
 const resultPage = document.getElementById("resultPage");
 
+// Show analyzing animation first
 setTimeout(() => {
   analyzing.classList.add("hidden");
   resultPage.classList.remove("hidden");
 }, 2000);
 
-const image = localStorage.getItem("uploadedImage");
+// 🔥 GET REAL RESULT FROM BACKEND
+const result = JSON.parse(localStorage.getItem("riceguard_result"));
 
-document.getElementById("originalImg").src = image;
-document.getElementById("detectImg").src = image;
-document.getElementById("heatmapImg").src = image;
+if (!result) {
+  alert("No detection data found. Please upload an image.");
+  window.location.href = "index.html";
+}
 
-const symptoms = [
-  "Yellow-orange stripes on leaf blades",
-  "Leaves wilt and roll up",
-  "Creamy bacterial ooze",
-  "V-shaped lesions from tips"
-];
+// 🔥 SET TEXT DATA
+document.getElementById("diseaseName").innerText = result.disease;
+document.getElementById("confidence").innerText = result.confidence + "%";
+document.getElementById("severity").innerText = result.severity;
+document.getElementById("description").innerText = result.description;
 
-const treatment = [
-  "Apply copper-based bactericides",
-  "Use resistant rice varieties",
-  "Avoid excess nitrogen",
-  "Ensure drainage",
-  "Remove infected debris"
-];
+// 🔥 SET IMAGES
+// Original uploaded image
+if (result.original_image) {
+  document.getElementById("originalImg").src =
+    "http://127.0.0.1:8000" + result.original_image;
+}
 
-const prevention = [
-  "Use certified seeds",
-  "Crop rotation",
-  "Balanced fertilization",
-  "Proper spacing"
-];
+// Detection image with YOLO bounding boxes
+if (result.result_image) {
+  document.getElementById("detectImg").src =
+    "http://127.0.0.1:8000" + result.result_image;
+}
 
-symptoms.forEach(s => {
-  const li = document.createElement("li");
-  li.textContent = s;
-  document.getElementById("symptoms").appendChild(li);
-});
+// (Optional) heatmap placeholder
+document.getElementById("heatmapImg").src =
+  document.getElementById("detectImg").src;
 
-treatment.forEach((t, i) => {
-  const li = document.createElement("li");
-  li.textContent = t;
-  document.getElementById("treatment").appendChild(li);
-});
+// 🔥 CLEAR OLD LISTS
+document.getElementById("symptoms").innerHTML = "";
+document.getElementById("treatment").innerHTML = "";
+document.getElementById("prevention").innerHTML = "";
 
-prevention.forEach(p => {
-  const li = document.createElement("li");
-  li.textContent = p;
-  document.getElementById("prevention").appendChild(li);
-});
+// 🔥 POPULATE SYMPTOMS
+if (result.symptoms && result.symptoms.length > 0) {
+  result.symptoms.forEach(item => {
+    const li = document.createElement("li");
+    li.textContent = item;
+    document.getElementById("symptoms").appendChild(li);
+  });
+}
+
+// 🔥 POPULATE TREATMENT
+if (result.treatment && result.treatment.length > 0) {
+  result.treatment.forEach(item => {
+    const li = document.createElement("li");
+    li.textContent = item;
+    document.getElementById("treatment").appendChild(li);
+  });
+}
+
+// 🔥 POPULATE PREVENTION
+if (result.prevention && result.prevention.length > 0) {
+  result.prevention.forEach(item => {
+    const li = document.createElement("li");
+    li.textContent = item;
+    document.getElementById("prevention").appendChild(li);
+  });
+}
