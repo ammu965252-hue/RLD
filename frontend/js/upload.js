@@ -45,6 +45,9 @@ async function detectDisease() {
     return;
   }
 
+  // 🔥 CLEAR OLD RESULT
+  localStorage.removeItem("riceguard_result");
+
   detectBtn.innerText = "Detecting...";
   detectBtn.disabled = true;
 
@@ -57,20 +60,15 @@ async function detectDisease() {
       body: formData
     });
 
-    if (!response.ok) {
-      throw new Error("Server error");
-    }
-
     const result = await response.json();
 
-    // ✅ Save REAL model output
+    // 🔥 SAVE NEW RESULT
     localStorage.setItem("riceguard_result", JSON.stringify(result));
 
-    // Redirect to result page
     window.location.href = "result.html";
 
   } catch (error) {
-    alert("Error detecting disease. Please try again.");
+    alert("Detection failed. Try again.");
     console.error(error);
   } finally {
     detectBtn.innerText = "Detect Disease";

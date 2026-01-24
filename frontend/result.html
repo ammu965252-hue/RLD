@@ -44,15 +44,12 @@
 <section id="resultPage" class="hidden">
   <div class="container">
 
-    <!-- HEADER -->
     <div class="result-header">
       <div>
         <h1>Detection Results</h1>
         <p class="text-muted">Analysis completed successfully</p>
       </div>
       <div class="actions">
-        <button class="btn btn-outline">🔗 Share</button>
-        <button class="btn btn-outline">⬇ Download</button>
         <a href="index.html" class="btn btn-primary">🔄 New Scan</a>
       </div>
     </div>
@@ -71,18 +68,14 @@
             <h3>Detection Result</h3>
             <div class="detect-box">
               <img id="detectImg">
-              <div class="bbox"></div>
-              <span class="label">BLB Detected</span>
+              <span id="detectionLabel" class="label"></span>
             </div>
           </div>
         </div>
 
         <div class="card">
           <h3>AI Heatmap</h3>
-          <div class="heatmap">
-            <img id="heatmapImg">
-            <div class="heatmap-bar"></div>
-          </div>
+          <img id="heatmapImg">
         </div>
 
         <div class="card">
@@ -94,15 +87,15 @@
       <!-- RIGHT -->
       <div>
         <div class="card severity-card">
-          <h2>Bacterial Leaf Blight</h2>
+          <h2 id="diseaseName">-</h2>
+
           <p class="text-muted">Confidence</p>
           <div class="progress">
-            <div class="progress-bar" style="width:94.7%"></div>
+            <div id="confidenceBar" class="progress-bar"></div>
           </div>
-          <p class="severity moderate">Moderate</p>
-          <p class="text-muted mt-2">
-            BLB is caused by Xanthomonas oryzae. It appears as yellow lesions.
-          </p>
+
+          <p id="severity" class="severity">-</p>
+          <p id="description" class="text-muted mt-2">-</p>
         </div>
 
         <div class="card">
@@ -114,10 +107,6 @@
           <h3>Prevention</h3>
           <ul id="prevention"></ul>
         </div>
-
-        <a href="chatbot.html" class="btn btn-primary full-width">
-          Ask Our AI Expert →
-        </a>
       </div>
 
     </div>

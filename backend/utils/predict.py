@@ -2,15 +2,26 @@ import os
 import cv2
 from ultralytics import YOLO
 
-# ================= LOAD MODEL =================
-model = YOLO("model/best.pt")
+# =====================================================
+# BASE PATHS (SAFE FOR LOCAL / SERVER / DEPLOYMENT)
+# =====================================================
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+MODEL_PATH = os.path.join(BASE_DIR, "model", "best.pt")
 
-# ================= OUTPUT DIR =================
-RESULT_DIR = "uploads/results"
+UPLOAD_DIR = os.path.join(BASE_DIR, "uploads")
+RESULT_DIR = os.path.join(UPLOAD_DIR, "results")
+
+os.makedirs(UPLOAD_DIR, exist_ok=True)
 os.makedirs(RESULT_DIR, exist_ok=True)
 
-# ================= DISEASE INFO =================
-# ⚠️ MUST MATCH data.yaml EXACTLY
+# =====================================================
+# LOAD YOLOv8 MODEL (NEW TRAINED MODEL)
+# =====================================================
+model = YOLO(MODEL_PATH)
+
+# =====================================================
+# DISEASE INFORMATION (KEYS MUST MATCH MODEL CLASSES)
+# =====================================================
 DISEASE_INFO = {
     "Blight": {
         "symptoms": [
@@ -31,7 +42,7 @@ DISEASE_INFO = {
         ]
     },
 
-    "Brown spot": {
+    "Brown Spot": {
         "symptoms": [
             "Brown circular spots",
             "Yellow halo around lesions",
@@ -87,7 +98,7 @@ DISEASE_INFO = {
         ]
     },
 
-    "Rice blast": {
+    "Rice Blast": {
         "symptoms": [
             "Diamond-shaped lesions",
             "Gray centers with brown margins"
@@ -133,34 +144,55 @@ DISEASE_INFO = {
     }
 }
 
-# ================= PREDICTION FUNCTION =================
+# =====================================================
+# PREDICTION FUNCTION
+# =====================================================
 def predict_disease(image_path: str):
-    results = model(image_path)[0]
+    filename = os.path.basename(image_path)
 
-    # ================= NO DETECTION =================
+    # 🔥 SAME SETTINGS AS COLAB (VERY IMPORTANT)
+    results = model(
+        image_path,
+        imgsz=640,
+        conf=0.5,
+        iou=0.5,
+        device="cpu"   # change to "cuda" later if GPU server
+    )[0]
+
+    # =================================================
+    # NO DETECTION → HEALTHY
+    # =================================================
     if results.boxes is None or len(results.boxes) == 0:
         return {
-            "disease": "Unknown",
-            "confidence": 0.0,
+            "disease": "Healthy",
+            "confidence": 99.0,
             "severity": "None",
             "description": "No disease detected.",
             "symptoms": [],
             "treatment": [],
-            "prevention": [],
-            "result_image": None
+            "prevention": DISEASE_INFO["Healthy"]["prevention"],
+            "original_image": f"/uploads/{filename}",
+            "result_image": f"/uploads/{filename}"
         }
 
-    # ================= BEST CONFIDENCE BOX =================
+    # =================================================
+    # BEST CONFIDENCE BOX
+    # =================================================
     best_idx = int(results.boxes.conf.argmax())
     cls_id = int(results.boxes.cls[best_idx])
-    confidence = float(results.boxes.conf[best_idx]) * 100
-    disease = results.names[cls_id]
 
-    # ================= SAVE BOUNDING BOX IMAGE =================
+    confidence = float(results.boxes.conf[best_idx]) * 100
+
+    # 🔥 NORMALIZE CLASS NAME (CRITICAL FIX)
+    disease = results.names[cls_id].strip().title()
+
+    # =================================================
+    # SAVE RESULT IMAGE WITH BOUNDING BOX
+    # =================================================
     plotted_img = results.plot()
-    filename = f"result_{os.path.basename(image_path)}"
-    save_path = os.path.join(RESULT_DIR, filename)
-    cv2.imwrite(save_path, plotted_img)
+    result_filename = f"result_{filename}"
+    result_path = os.path.join(RESULT_DIR, result_filename)
+    cv2.imwrite(result_path, plotted_img)
 
     info = DISEASE_INFO.get(disease, {
         "symptoms": ["Information not available"],
@@ -168,6 +200,9 @@ def predict_disease(image_path: str):
         "prevention": ["General crop care recommended"]
     })
 
+    # =================================================
+    # SEVERITY CALCULATION
+    # =================================================
     severity = (
         "Severe" if confidence >= 95 else
         "Moderate" if confidence >= 85 else
@@ -182,5 +217,6 @@ def predict_disease(image_path: str):
         "symptoms": info["symptoms"],
         "treatment": info["treatment"],
         "prevention": info["prevention"],
-        "result_image": f"/uploads/results/{filename}"
+        "original_image": f"/uploads/{filename}",
+        "result_image": f"/uploads/results/{result_filename}"
     }

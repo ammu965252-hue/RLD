@@ -1,60 +1,48 @@
-# All Code
+# File: README.md
+```markdown
+# RLD
+```
 
-## Backend
-
-### app.py
+# File: backend/app.py
 ```python
 from fastapi import FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-import shutil
-import os
-
+import shutil, os
 from utils.predict import predict_disease
 
 app = FastAPI(title="RiceGuard AI Backend")
 
-# Allow frontend access
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # change later for production
+    allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Upload directory
 UPLOAD_DIR = "uploads"
+RESULT_DIR = "uploads/results"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
+os.makedirs(RESULT_DIR, exist_ok=True)
 
-# Serve uploaded images
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
-
 
 @app.post("/detect")
 async def detect_disease(file: UploadFile = File(...)):
-    # Validate file type
     if not file.content_type.startswith("image/"):
-        return {"error": "Invalid file type. Please upload an image."}
+        return {"error": "Invalid file"}
 
-    # Save image
     file_path = os.path.join(UPLOAD_DIR, file.filename)
+
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
 
-    # Run ML model
-    try:
-        result = predict_disease(file_path)
-    except Exception as e:
-        return {"error": f"Prediction failed: {str(e)}"}
-
-    # Send image URL to frontend
-    result["image_url"] = f"http://127.0.0.1:8000/uploads/{file.filename}"
-
+    result = predict_disease(file_path)
     return result
 ```
 
-### requirements.txt
-```
+# File: backend/requirements.txt
+```pip-requirements
 fastapi
 uvicorn[standard]
 opencv-python
@@ -74,93 +62,201 @@ pytest
 scikit-learn
 ```
 
-### utils/predict.py
+# File: backend/utils/predict.py
 ```python
+import os
+import cv2
 from ultralytics import YOLO
 
+# ================= LOAD MODEL =================
 model = YOLO("model/best.pt")
 
+# ================= DIRECTORIES =================
+UPLOAD_DIR = "uploads"
+RESULT_DIR = "uploads/results"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+os.makedirs(RESULT_DIR, exist_ok=True)
+
+# ================= DISEASE INFO =================
 DISEASE_INFO = {
-    "Bacterial Leaf Blight": {
+    "Blight": {
         "symptoms": [
             "Yellow-orange stripes on leaf blades",
             "Leaves wilt and roll up",
             "Creamy bacterial ooze",
             "V-shaped lesions from leaf tips"
         ],
+        "treatment": [
+            "Apply copper-based bactericides",
+            "Remove infected leaves",
+            "Avoid excessive nitrogen fertilizer"
+        ],
         "prevention": [
             "Use certified disease-free seeds",
-            "Ensure proper field drainage",
-            "Avoid excess nitrogen fertilizer",
+            "Ensure proper drainage",
             "Practice crop rotation"
         ]
     },
-    "Brown Spot": {
+
+    "Brown spot": {
         "symptoms": [
             "Brown circular spots",
             "Yellow halo around lesions",
             "Reduced grain quality"
         ],
+        "treatment": [
+            "Apply Mancozeb or Carbendazim",
+            "Improve soil nutrition"
+        ],
         "prevention": [
             "Balanced fertilization",
-            "Use resistant varieties",
             "Seed treatment before planting"
+        ]
+    },
+
+    "False Smut": {
+        "symptoms": [
+            "Green to yellow smut balls on panicles",
+            "Powdery spores inside balls"
+        ],
+        "treatment": [
+            "Remove infected panicles",
+            "Apply Propiconazole fungicide"
+        ],
+        "prevention": [
+            "Avoid excess nitrogen",
+            "Use resistant varieties"
+        ]
+    },
+
+    "Healthy": {
+        "symptoms": [],
+        "treatment": [],
+        "prevention": [
+            "Maintain proper irrigation",
+            "Balanced fertilizer use",
+            "Regular field monitoring"
+        ]
+    },
+
+    "Leaf Smut": {
+        "symptoms": [
+            "Black streaks on leaves",
+            "Reduced photosynthesis"
+        ],
+        "treatment": [
+            "Apply suitable fungicide",
+            "Remove infected plants"
+        ],
+        "prevention": [
+            "Use disease-free seeds",
+            "Crop rotation"
+        ]
+    },
+
+    "Rice blast": {
+        "symptoms": [
+            "Diamond-shaped lesions",
+            "Gray centers with brown margins"
+        ],
+        "treatment": [
+            "Spray Tricyclazole",
+            "Maintain proper water levels"
+        ],
+        "prevention": [
+            "Use blast-resistant varieties",
+            "Avoid excess nitrogen"
+        ]
+    },
+
+    "Stem Rot": {
+        "symptoms": [
+            "Rotting of stem base",
+            "Wilting of plants"
+        ],
+        "treatment": [
+            "Improve drainage",
+            "Apply recommended fungicide"
+        ],
+        "prevention": [
+            "Avoid waterlogging",
+            "Balanced fertilization"
+        ]
+    },
+
+    "Tungro": {
+        "symptoms": [
+            "Yellow-orange discoloration",
+            "Stunted growth"
+        ],
+        "treatment": [
+            "Remove infected plants",
+            "Control leafhopper vectors"
+        ],
+        "prevention": [
+            "Vector control",
+            "Use resistant varieties"
         ]
     }
 }
 
-def predict_disease(image_path):
+# ================= PREDICTION FUNCTION =================
+def predict_disease(image_path: str):
     results = model(image_path)[0]
+    filename = os.path.basename(image_path)
 
-    # ✅ Handle no detection case
+    # ================= NO DETECTION =================
     if results.boxes is None or len(results.boxes) == 0:
         return {
             "disease": "Healthy",
             "confidence": 99.0,
             "severity": "None",
-            "description": "No disease detected. Leaf appears healthy.",
+            "description": "No disease detected.",
             "symptoms": [],
             "treatment": [],
-            "prevention": [
-                "Maintain proper irrigation",
-                "Use balanced fertilizers",
-                "Regular crop monitoring"
-            ]
+            "prevention": DISEASE_INFO["Healthy"]["prevention"],
+            "original_image": f"/uploads/{filename}",
+            "result_image": f"/uploads/{filename}"
         }
 
-    disease = results.names[int(results.boxes.cls[0])]
-    confidence = float(results.boxes.conf[0]) * 100
+    # ================= BEST CONFIDENCE =================
+    best_idx = int(results.boxes.conf.argmax())
+    cls_id = int(results.boxes.cls[best_idx])
+    confidence = float(results.boxes.conf[best_idx]) * 100
+    disease = results.names[cls_id]
+
+    # ================= SAVE RESULT IMAGE =================
+    plotted_img = results.plot()
+    result_filename = f"result_{filename}"
+    result_path = os.path.join(RESULT_DIR, result_filename)
+    cv2.imwrite(result_path, plotted_img)
 
     info = DISEASE_INFO.get(disease, {
-        "symptoms": ["Symptoms not available"],
+        "symptoms": ["Information not available"],
+        "treatment": ["Consult agriculture expert"],
         "prevention": ["General crop care recommended"]
     })
+
+    severity = (
+        "Severe" if confidence >= 95 else
+        "Moderate" if confidence >= 85 else
+        "Mild"
+    )
 
     return {
         "disease": disease,
         "confidence": round(confidence, 2),
-        "severity": (
-            "Severe" if confidence > 95 else
-            "Moderate" if confidence > 85 else
-            "Mild"
-        ),
+        "severity": severity,
         "description": f"{disease} detected on rice leaf.",
         "symptoms": info["symptoms"],
-        "treatment": [
-            "Remove infected leaves",
-            "Apply recommended fungicide",
-            "Avoid excess nitrogen fertilizer",
-            "Ensure proper drainage"
-        ],
-        "prevention": info["prevention"]
+        "treatment": info["treatment"],
+        "prevention": info["prevention"],
+        "original_image": f"/uploads/{filename}",
+        "result_image": f"/uploads/results/{result_filename}"
     }
 ```
 
-## Frontend
-
-### HTML Files
-
-#### about.html
+# File: frontend/about.html
 ```html
 <!DOCTYPE html>
 <html lang="en">
@@ -218,9 +314,9 @@ def predict_disease(image_path):
 <section class="container about-section">
   <div class="about-grid">
     <div>
-      <h2>The Problem We're Solving</h2>
+      <h2>The Problem We’re Solving</h2>
       <p class="text-muted">
-        Rice feeds more than half of the world's population. However, diseases like
+        Rice feeds more than half of the world’s population. However, diseases like
         Bacterial Leaf Blight, Brown Spot, and Leaf Blast cause severe yield losses
         every year.
       </p>
@@ -273,7 +369,7 @@ def predict_disease(image_path):
 <!-- ================= FEATURES ================= -->
 <section class="about-features">
   <div class="container">
-    <h2 class="text-center">Key Features</h2>
+    <h2>Key Features</h2>
     <p class="text-center text-muted mb-6">
       Built with modern AI and designed for real-world farming
     </p>
@@ -356,7 +452,7 @@ def predict_disease(image_path):
 </html>
 ```
 
-#### chatbot.html
+# File: frontend/chatbot.html
 ```html
 <!DOCTYPE html>
 <html lang="en">
@@ -439,7 +535,7 @@ def predict_disease(image_path):
 </html>
 ```
 
-#### dashboard.html
+# File: frontend/dashboard.html
 ```html
 <!DOCTYPE html>
 <html lang="en">
@@ -620,7 +716,7 @@ def predict_disease(image_path):
 </html>
 ```
 
-#### history.html
+# File: frontend/history.html
 ```html
 <!DOCTYPE html>
 <html lang="en">
@@ -748,12 +844,11 @@ def predict_disease(image_path):
 </html>
 ```
 
-#### index.html
+# File: frontend/index.html
 ```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
   <title>RiceGuard AI – Rice Leaf Disease Detection</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
@@ -889,7 +984,7 @@ def predict_disease(image_path):
 </html>
 ```
 
-#### login.html
+# File: frontend/login.html
 ```html
 <!DOCTYPE html>
 <html lang="en">
@@ -971,8 +1066,8 @@ def predict_disease(image_path):
   </div>
 
   <p class="text-muted mt-4">
-    Don't have an account?
-    <a href="login.html" class="primary-text">Create account</a>
+    Don’t have an account?
+    <a href="register.html" class="primary-text">Create account</a>
   </p>
 
 </div>
@@ -982,7 +1077,7 @@ def predict_disease(image_path):
 </html>
 ```
 
-#### register.html
+# File: frontend/register.html
 ```html
 <!DOCTYPE html>
 <html lang="en">
@@ -1086,7 +1181,7 @@ def predict_disease(image_path):
 </html>
 ```
 
-#### result.html
+# File: frontend/result.html
 ```html
 <!DOCTYPE html>
 <html lang="en">
@@ -1134,15 +1229,12 @@ def predict_disease(image_path):
 <section id="resultPage" class="hidden">
   <div class="container">
 
-    <!-- HEADER -->
     <div class="result-header">
       <div>
         <h1>Detection Results</h1>
         <p class="text-muted">Analysis completed successfully</p>
       </div>
       <div class="actions">
-        <button class="btn btn-outline">🔗 Share</button>
-        <button class="btn btn-outline">⬇ Download</button>
         <a href="index.html" class="btn btn-primary">🔄 New Scan</a>
       </div>
     </div>
@@ -1161,18 +1253,14 @@ def predict_disease(image_path):
             <h3>Detection Result</h3>
             <div class="detect-box">
               <img id="detectImg">
-              <div class="bbox"></div>
-              <span class="label">BLB Detected</span>
+              <span id="detectionLabel" class="label"></span>
             </div>
           </div>
         </div>
 
         <div class="card">
           <h3>AI Heatmap</h3>
-          <div class="heatmap">
-            <img id="heatmapImg">
-            <div class="heatmap-bar"></div>
-          </div>
+          <img id="heatmapImg">
         </div>
 
         <div class="card">
@@ -1184,15 +1272,15 @@ def predict_disease(image_path):
       <!-- RIGHT -->
       <div>
         <div class="card severity-card">
-          <h2>Bacterial Leaf Blight</h2>
+          <h2 id="diseaseName">-</h2>
+
           <p class="text-muted">Confidence</p>
           <div class="progress">
-            <div class="progress-bar" style="width:94.7%"></div>
+            <div id="confidenceBar" class="progress-bar"></div>
           </div>
-          <p class="severity moderate">Moderate</p>
-          <p class="text-muted mt-2">
-            BLB is caused by Xanthomonas oryzae. It appears as yellow lesions.
-          </p>
+
+          <p id="severity" class="severity">-</p>
+          <p id="description" class="text-muted mt-2">-</p>
         </div>
 
         <div class="card">
@@ -1204,10 +1292,6 @@ def predict_disease(image_path):
           <h3>Prevention</h3>
           <ul id="prevention"></ul>
         </div>
-
-        <a href="chatbot.html" class="btn btn-primary full-width">
-          Ask Our AI Expert →
-        </a>
       </div>
 
     </div>
@@ -1219,7 +1303,7 @@ def predict_disease(image_path):
 </html>
 ```
 
-### script.js
+# File: frontend/script.js
 ```javascript
 // Front-end only placeholder logic
 
@@ -1229,9 +1313,168 @@ console.log("RiceGuard AI UI Loaded");
 // - Image preview
 // - Loading animation
 // - Display model results
+
 ```
 
-### README.md
+# File: frontend/style.css
+```css
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Poppins', sans-serif;
+}
+
+body {
+  background: #f4f7f2;
+  color: #2f3e2f;
+}
+
+/* HERO */
+.hero {
+  min-height: 100vh;
+  padding: 80px 8%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 40px;
+  background: linear-gradient(
+      rgba(255,255,255,0.9),
+      rgba(255,255,255,0.9)
+    ),
+    url("https://images.unsplash.com/photo-1598514983318-2f64f8f4796c");
+  background-size: cover;
+  background-position: center;
+}
+
+.hero-left {
+  max-width: 500px;
+}
+
+.hero-left h1 {
+  font-size: 3rem;
+  color: #1b5e20;
+}
+
+.hero-left p {
+  margin: 20px 0;
+  font-size: 1.1rem;
+  line-height: 1.6;
+}
+
+/* BUTTONS */
+.upload-buttons {
+  display: flex;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.btn {
+  padding: 14px 22px;
+  border-radius: 10px;
+  font-size: 1rem;
+  cursor: pointer;
+  border: none;
+}
+
+.primary {
+  background: #2e7d32;
+  color: white;
+}
+
+.secondary {
+  background: #e8f5e9;
+  color: #2e7d32;
+  border: 2px solid #2e7d32;
+}
+
+/* RESULT BOX */
+.result-box {
+  width: 360px;
+  height: 220px;
+  border: 2px dashed #a5d6a7;
+  border-radius: 14px;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.placeholder {
+  color: #9e9e9e;
+  text-align: center;
+}
+
+/* HOW IT WORKS */
+.how-it-works {
+  padding: 80px 8%;
+  text-align: center;
+}
+
+.how-it-works h2 {
+  font-size: 2.4rem;
+  color: #1b5e20;
+}
+
+.subtitle {
+  margin-top: 10px;
+  color: #555;
+}
+
+/* CARDS */
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 25px;
+  margin-top: 50px;
+}
+
+.card {
+  background: white;
+  padding: 30px;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+}
+
+.icon {
+  font-size: 2.2rem;
+  background: #2e7d32;
+  color: white;
+  width: 55px;
+  height: 55px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: auto;
+}
+
+.card h3 {
+  margin: 20px 0 10px;
+  color: #1b5e20;
+}
+
+/* STATS */
+.stats {
+  background: #e8f5e9;
+  padding: 60px 8%;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  text-align: center;
+}
+
+.stat h3 {
+  font-size: 2.5rem;
+  color: #2e7d32;
+}
+
+.stat p {
+  color: #555;
+}
+
+```
+
+# File: frontend/README.md
 ```markdown
 # Rice Leaf Detection - Frontend
 
@@ -1561,9 +1804,7 @@ When adding new features:
 [Add contact information here]
 ```
 
-### CSS Files
-
-#### animations.css
+# File: frontend/css/animations.css
 ```css
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }
@@ -1593,7 +1834,7 @@ When adding new features:
 }
 ```
 
-#### base.css
+# File: frontend/css/base.css
 ```css
 *,
 *::before,
@@ -1650,7 +1891,7 @@ h1, h2, h3, h4 {
 .mb-6 { margin-bottom: 24px; }
 ```
 
-#### components.css
+# File: frontend/css/components.css
 ```css
 /* NAVBAR */
 .navbar {
@@ -1747,7 +1988,7 @@ h1, h2, h3, h4 {
 }
 ```
 
-#### pages.css
+# File: frontend/css/pages.css
 ```css
 .hero {
   padding: 80px 0;
@@ -2305,7 +2546,7 @@ h1, h2, h3, h4 {
 }
 ```
 
-#### variables.css
+# File: frontend/css/variables.css
 ```css
 :root {
   /* Brand Colors */
@@ -2345,9 +2586,7 @@ h1, h2, h3, h4 {
 }
 ```
 
-### JavaScript Files
-
-#### auth.js
+# File: frontend/js/auth.js
 ```javascript
 // PASSWORD TOGGLE
 const togglePassword = document.getElementById("togglePassword");
@@ -2441,7 +2680,7 @@ document.getElementById("registerForm")?.addEventListener("submit", (e) => {
 });
 ```
 
-#### chatbot.js
+# File: frontend/js/chatbot.js
 ```javascript
 const chatBody = document.getElementById("chatBody");
 const chatInput = document.getElementById("chatInput");
@@ -2511,7 +2750,7 @@ function removeTyping() {
 addMessage(botResponses.default, "bot");
 ```
 
-#### dashboard.js
+# File: frontend/js/dashboard.js
 ```javascript
 const sidebar = document.getElementById("sidebar");
 const openBtn = document.getElementById("openSidebar");
@@ -2521,7 +2760,7 @@ openBtn.onclick = () => sidebar.classList.add("show");
 closeBtn.onclick = () => sidebar.classList.remove("show");
 ```
 
-#### history.js
+# File: frontend/js/history.js
 ```javascript
 const data = [
   { id:1, image:"https://images.unsplash.com/photo-1536304993881-ff6e9eefa2a6", disease:"Bacterial Leaf Blight", severity:"Moderate", confidence:94.7, date:"2024-01-15" },
@@ -2592,7 +2831,7 @@ toggleEmpty.addEventListener("click", () => {
 render(data);
 ```
 
-#### main.js
+# File: frontend/js/main.js
 ```javascript
 document.addEventListener("DOMContentLoaded", () => {
   // Active nav link
@@ -2617,72 +2856,67 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 ```
 
-#### result.js
+# File: frontend/js/result.js
 ```javascript
 const analyzing = document.getElementById("analyzing");
 const resultPage = document.getElementById("resultPage");
 
-// Show analyzing animation first
 setTimeout(() => {
   analyzing.classList.add("hidden");
   resultPage.classList.remove("hidden");
 }, 2000);
 
-// 🔥 GET REAL RESULT FROM BACKEND
 const result = JSON.parse(localStorage.getItem("riceguard_result"));
 
 if (!result) {
-  alert("No detection data found. Please upload an image.");
+  alert("No detection data found.");
   window.location.href = "index.html";
 }
 
-// 🔥 SET TEXT DATA (REAL)
+// 🔥 TEXT DATA
 document.getElementById("diseaseName").innerText = result.disease;
-document.getElementById("confidence").innerText = result.confidence + "%";
 document.getElementById("severity").innerText = result.severity;
 document.getElementById("description").innerText = result.description;
 
-// 🔥 SET IMAGES (UPLOAD IMAGE USED FOR DETECTION)
-const uploadedImage = localStorage.getItem("uploadedImage");
+// 🔥 CONFIDENCE BAR
+document.getElementById("confidenceBar").style.width =
+  result.confidence + "%";
 
-document.getElementById("originalImg").src = uploadedImage;
-document.getElementById("detectImg").src = uploadedImage;
-document.getElementById("heatmapImg").src = uploadedImage;
+// 🔥 LABEL
+document.getElementById("detectionLabel").innerText =
+  result.disease + " Detected";
 
-// 🔥 CLEAR OLD LISTS
-document.getElementById("symptoms").innerHTML = "";
-document.getElementById("treatment").innerHTML = "";
-document.getElementById("prevention").innerHTML = "";
+// 🔥 IMAGES
+document.getElementById("originalImg").src =
+  "http://127.0.0.1:8000" + result.original_image;
 
-// 🔥 POPULATE REAL SYMPTOMS
-if (result.symptoms) {
-  result.symptoms.forEach(item => {
-    const li = document.createElement("li");
-    li.textContent = item;
-    document.getElementById("symptoms").appendChild(li);
-  });
-}
+document.getElementById("detectImg").src =
+  "http://127.0.0.1:8000" + result.result_image;
 
-// 🔥 POPULATE REAL TREATMENT
-if (result.treatment) {
-  result.treatment.forEach(item => {
-    const li = document.createElement("li");
-    li.textContent = item;
-    document.getElementById("treatment").appendChild(li);
-  });
-}
+// Heatmap (placeholder = detection image)
+document.getElementById("heatmapImg").src =
+  document.getElementById("detectImg").src;
 
-// 🔥 POPULATE REAL PREVENTION
-if (result.prevention) {
-  result.prevention.forEach(item => {
-    const li = document.createElement("li");
-    li.textContent = item;
-    document.getElementById("prevention").appendChild(li);
-  });
-}
+// 🔥 CLEAR LISTS
+["symptoms", "treatment", "prevention"].forEach(id => {
+  document.getElementById(id).innerHTML = "";
+});
+
+// 🔥 POPULATE DATA
+result.symptoms.forEach(item => {
+  document.getElementById("symptoms").innerHTML += `<li>${item}</li>`;
+});
+
+result.treatment.forEach(item => {
+  document.getElementById("treatment").innerHTML += `<li>${item}</li>`;
+});
+
+result.prevention.forEach(item => {
+  document.getElementById("prevention").innerHTML += `<li>${item}</li>`;
+});
 ```
 
-#### upload.js
+# File: frontend/js/upload.js
 ```javascript
 const fileInput = document.getElementById("fileInput");
 const previewContainer = document.getElementById("previewContainer");
@@ -2731,6 +2965,9 @@ async function detectDisease() {
     return;
   }
 
+  // 🔥 CLEAR OLD RESULT
+  localStorage.removeItem("riceguard_result");
+
   detectBtn.innerText = "Detecting...";
   detectBtn.disabled = true;
 
@@ -2743,20 +2980,15 @@ async function detectDisease() {
       body: formData
     });
 
-    if (!response.ok) {
-      throw new Error("Server error");
-    }
-
     const result = await response.json();
 
-    // ✅ Save REAL model output
+    // 🔥 SAVE NEW RESULT
     localStorage.setItem("riceguard_result", JSON.stringify(result));
 
-    // Redirect to result page
     window.location.href = "result.html";
 
   } catch (error) {
-    alert("Error detecting disease. Please try again.");
+    alert("Detection failed. Try again.");
     console.error(error);
   } finally {
     detectBtn.innerText = "Detect Disease";
