@@ -1,0 +1,283 @@
+[
+  {
+    "disease": "False Smut",
+    "confidence": 81.66,
+    "severity": "Mild",
+    "description": "False Smut detected on rice leaf.",
+    "symptoms": [
+      "Green to yellow smut balls on panicles"
+    ],
+    "treatment": [
+      "Apply Propiconazole fungicide"
+    ],
+    "prevention": [
+      "Avoid excess nitrogen"
+    ],
+    "original_image": "/uploads/falsesmut.jpg",
+    "result_image": "/uploads/results/result_falsesmut.jpg",
+    "timestamp": "2026-01-25T14:01:10.948686"
+  },
+  {
+    "disease": "Brown Spot",
+    "confidence": 74.76,
+    "severity": "Mild",
+    "description": "Brown Spot detected on rice leaf.",
+    "symptoms": [
+      "Brown circular spots",
+      "Yellow halo around lesions",
+      "Reduced grain quality"
+    ],
+    "treatment": [
+      "Apply Mancozeb or Carbendazim",
+      "Improve soil nutrition"
+    ],
+    "prevention": [
+      "Balanced fertilization",
+      "Seed treatment before planting"
+    ],
+    "original_image": "/uploads/BROWNSPOT-82-.jpg",
+    "result_image": "/uploads/results/result_BROWNSPOT-82-.jpg",
+    "timestamp": "2026-01-25T13:58:58.532920"
+  },
+  {
+    "disease": "Brown Spot",
+    "confidence": 56.94,
+    "severity": "Mild",
+    "description": "Brown Spot detected on rice leaf.",
+    "symptoms": [
+      "Brown circular spots",
+      "Yellow halo around lesions",
+      "Reduced grain quality"
+    ],
+    "treatment": [
+      "Apply Mancozeb or Carbendazim",
+      "Improve soil nutrition"
+    ],
+    "prevention": [
+      "Balanced fertilization",
+      "Seed treatment before planting"
+    ],
+    "original_image": "/uploads/brownspot.jpg",
+    "result_image": "/uploads/results/result_brownspot.jpg",
+    "timestamp": "2026-01-25T13:58:01.231603"
+  },
+  {
+    "disease": "False Smut",
+    "confidence": 81.66,
+    "severity": "Mild",
+    "description": "False Smut detected on rice leaf.",
+    "symptoms": [
+      "Green to yellow smut balls on panicles"
+    ],
+    "treatment": [
+      "Apply Propiconazole fungicide"
+    ],
+    "prevention": [
+      "Avoid excess nitrogen"
+    ],
+    "original_image": "/uploads/falsesmut.jpg",
+    "result_image": "/uploads/results/result_falsesmut.jpg",
+    "timestamp": "2026-01-25T13:39:04.531362"
+  },
+  {
+    "disease": "Rice Blast",
+    "confidence": 52.92,
+    "severity": "Mild",
+    "description": "Rice Blast detected on rice leaf.",
+    "symptoms": [
+      "Diamond-shaped lesions"
+    ],
+    "treatment": [
+      "Spray Tricyclazole"
+    ],
+    "prevention": [
+      "Use blast-resistant varieties"
+    ],
+    "original_image": "/uploads/tungro-223.jpg",
+    "result_image": "/uploads/results/result_tungro-223.jpg",
+    "timestamp": "2026-01-25T13:30:13.678565"
+  },
+  {
+    "disease": "Leaf Smut",
+    "confidence": 57.92,
+    "severity": "Mild",
+    "description": "Leaf Smut detected on rice leaf.",
+    "symptoms": [
+      "Black streaks on leaves"
+    ],
+    "treatment": [
+      "Apply fungicide"
+    ],
+    "prevention": [
+      "Use disease-free seeds"
+    ],
+    "original_image": "/uploads/leafsmut.jpg",
+    "result_image": "/uploads/results/result_leafsmut.jpg",
+    "timestamp": "2026-01-25T12:00:00.815979"
+  },
+  {
+    "disease": "Healthy",
+    "confidence": 85.84,
+    "severity": "Moderate",
+    "description": "Healthy detected on rice leaf.",
+    "symptoms": [],
+    "treatment": [],
+    "prevention": [
+      "Maintain proper irrigation"
+    ],
+    "original_image": "/uploads/healthy.jpg",
+    "result_image": "/uploads/results/result_healthy.jpg",
+    "timestamp": "2026-01-25T11:52:46.415332"
+  },
+  {
+    "disease": "Brown Spot",
+    "confidence": 56.94,
+    "severity": "Mild",
+    "description": "Brown Spot detected on rice leaf.",
+    "symptoms": [
+      "Brown circular spots",
+      "Yellow halo around lesions",
+      "Reduced grain quality"
+    ],
+    "treatment": [
+      "Apply Mancozeb or Carbendazim",
+      "Improve soil nutrition"
+    ],
+    "prevention": [
+      "Balanced fertilization",
+      "Seed treatment before planting"
+    ],
+    "original_image": "/uploads/brownspot.jpg",
+    "result_image": "/uploads/results/result_brownspot.jpg",
+    "timestamp": "2026-01-25T11:52:17.888581"
+  },
+  {
+    "disease": "Stem Rot",
+    "confidence": 77.19,
+    "severity": "Mild",
+    "description": "Stem Rot detected on rice leaf.",
+    "symptoms": [
+      "Rotting of stem base"
+    ],
+    "treatment": [
+      "Improve drainage"
+    ],
+    "prevention": [
+      "Avoid waterlogging"
+    ],
+    "original_image": "/uploads/stem-rot-.jpg",
+    "result_image": "/uploads/results/result_stem-rot-.jpg",
+    "timestamp": "2026-01-25T11:51:45.915615"
+  },
+  {
+    "disease": "Healthy",
+    "confidence": 99.0,
+    "severity": "None",
+    "description": "No disease detected.",
+    "symptoms": [],
+    "treatment": [],
+    "prevention": [
+      "Maintain proper irrigation"
+    ],
+    "original_image": "/uploads/test3.jpg",
+    "result_image": "/uploads/test3.jpg",
+    "timestamp": "2026-01-25T11:46:39.945087"
+  },
+  {
+    "disease": "Rice Blast",
+    "confidence": 61.06,
+    "severity": "Mild",
+    "description": "Rice Blast detected on rice leaf.",
+    "symptoms": [
+      "Diamond-shaped lesions"
+    ],
+    "treatment": [
+      "Spray Tricyclazole"
+    ],
+    "prevention": [
+      "Use blast-resistant varieties"
+    ],
+    "original_image": "/uploads/test2.jpg",
+    "result_image": "/uploads/results/result_test2.jpg",
+    "timestamp": "2026-01-25T11:42:30.070305"
+  },
+  {
+    "disease": "Tungro",
+    "confidence": 81.34,
+    "severity": "Mild",
+    "description": "Tungro detected on rice leaf.",
+    "symptoms": [
+      "Yellow-orange discoloration"
+    ],
+    "treatment": [
+      "Remove infected plants"
+    ],
+    "prevention": [
+      "Control leafhopper vectors"
+    ],
+    "original_image": "/uploads/tungro.jpg",
+    "result_image": "/uploads/results/result_tungro.jpg",
+    "timestamp": "2026-01-25T11:41:11.860227"
+  },
+  {
+    "disease": "Blight",
+    "confidence": 75.35,
+    "severity": "Mild",
+    "description": "Blight detected on rice leaf.",
+    "symptoms": [
+      "Yellow-orange stripes on leaf blades",
+      "Leaves wilt and roll up",
+      "Creamy bacterial ooze",
+      "V-shaped lesions from leaf tips"
+    ],
+    "treatment": [
+      "Apply copper-based bactericides",
+      "Remove infected leaves",
+      "Avoid excessive nitrogen fertilizer"
+    ],
+    "prevention": [
+      "Use certified disease-free seeds",
+      "Ensure proper drainage",
+      "Practice crop rotation"
+    ],
+    "original_image": "/uploads/blight.jpg",
+    "result_image": "/uploads/results/result_blight.jpg",
+    "timestamp": "2026-01-25T11:40:11.423817"
+  },
+  {
+    "disease": "Rice Blast",
+    "confidence": 52.92,
+    "severity": "Mild",
+    "description": "Rice Blast detected on rice leaf.",
+    "symptoms": [
+      "Diamond-shaped lesions"
+    ],
+    "treatment": [
+      "Spray Tricyclazole"
+    ],
+    "prevention": [
+      "Use blast-resistant varieties"
+    ],
+    "original_image": "/uploads/tungro-223.jpg",
+    "result_image": "/uploads/results/result_tungro-223.jpg",
+    "timestamp": "2026-01-25T11:39:46.069578"
+  },
+  {
+    "disease": "False Smut",
+    "confidence": 81.66,
+    "severity": "Mild",
+    "description": "False Smut detected on rice leaf.",
+    "symptoms": [
+      "Green to yellow smut balls on panicles"
+    ],
+    "treatment": [
+      "Apply Propiconazole fungicide"
+    ],
+    "prevention": [
+      "Avoid excess nitrogen"
+    ],
+    "original_image": "/uploads/falsesmut.jpg",
+    "result_image": "/uploads/results/result_falsesmut.jpg",
+    "timestamp": "2026-01-25T11:39:15.028788"
+  }
+]

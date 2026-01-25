@@ -6,15 +6,26 @@ const detectBtn = document.getElementById("detectBtn");
 
 let selectedFile = null;
 
-// Open file picker
+/* ================================
+   OPEN FILE PICKER
+================================ */
 function openFilePicker() {
   fileInput.click();
 }
 
-// Handle file selection
+/* ================================
+   HANDLE FILE SELECTION
+================================ */
 fileInput.addEventListener("change", () => {
   const file = fileInput.files[0];
-  if (!file || !file.type.startsWith("image/")) return;
+
+  if (!file) return;
+
+  if (!file.type.startsWith("image/")) {
+    alert("Please upload a valid image file");
+    fileInput.value = "";
+    return;
+  }
 
   selectedFile = file;
 
@@ -28,24 +39,31 @@ fileInput.addEventListener("change", () => {
   reader.readAsDataURL(file);
 });
 
-// Remove selected image
+/* ================================
+   REMOVE IMAGE
+================================ */
 function removeImage(e) {
   e.stopPropagation();
+
   previewImage.src = "";
   previewContainer.classList.add("hidden");
   uploadPlaceholder.classList.remove("hidden");
   detectBtn.classList.add("hidden");
+
+  fileInput.value = "";
   selectedFile = null;
 }
 
-// 🔥 REAL DISEASE DETECTION
+/* ================================
+   REAL DISEASE DETECTION
+================================ */
 async function detectDisease() {
   if (!selectedFile) {
     alert("Please upload an image first");
     return;
   }
 
-  // 🔥 CLEAR OLD RESULT
+  // Clear previous result
   localStorage.removeItem("riceguard_result");
 
   detectBtn.innerText = "Detecting...";
@@ -60,16 +78,26 @@ async function detectDisease() {
       body: formData
     });
 
+    if (!response.ok) {
+      throw new Error("Server error");
+    }
+
     const result = await response.json();
 
-    // 🔥 SAVE NEW RESULT
+    // Basic validation
+    if (!result.disease) {
+      throw new Error("Invalid response from model");
+    }
+
+    // Save result for result.html
     localStorage.setItem("riceguard_result", JSON.stringify(result));
 
+    // Redirect
     window.location.href = "result.html";
 
   } catch (error) {
-    alert("Detection failed. Try again.");
-    console.error(error);
+    console.error("Detection error:", error);
+    alert("Detection failed. Please try another image.");
   } finally {
     detectBtn.innerText = "Detect Disease";
     detectBtn.disabled = false;

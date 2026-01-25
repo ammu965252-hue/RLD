@@ -22,7 +22,10 @@ function addMessage(text, type) {
   chatBody.scrollTop = chatBody.scrollHeight;
 }
 
-function sendMessage() {
+const chatBody = document.getElementById("chatBody");
+const chatInput = document.getElementById("chatInput");
+
+async function sendMessage() {
   const text = chatInput.value.trim();
   if (!text) return;
 
@@ -31,23 +34,25 @@ function sendMessage() {
 
   showTyping();
 
-  setTimeout(() => {
+  try {
+    const response = await fetch("http://127.0.0.1:8000/chatbot", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: text })
+    });
+    const data = await response.json();
     removeTyping();
-    const response = getBotResponse(text.toLowerCase());
-    addMessage(response, "bot");
-  }, 1500);
+    addMessage(data.response, "bot");
+  } catch (error) {
+    removeTyping();
+    addMessage("Sorry, I'm unable to respond right now.", "bot");
+  }
 }
 
 function quickAsk(text) {
   chatInput.value = text;
   sendMessage();
 }
-
-function getBotResponse(query) {
-  for (let key in botResponses) {
-    if (query.includes(key)) return botResponses[key];
-  }
-  return botResponses.default;
 }
 
 function showTyping() {

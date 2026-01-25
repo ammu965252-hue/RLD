@@ -26,17 +26,7 @@
     <a href="index.html">📷 New Detection</a>
     <a href="history.html">📁 History</a>
     <a href="chatbot.html">💬 Chatbot</a>
-    <a href="#">📈 Analytics</a>
-    <a href="#">⚙ Settings</a>
   </nav>
-
-  <div class="sidebar-user">
-    <div class="avatar">JD</div>
-    <div>
-      <p>John Doe</p>
-      <span class="text-muted">john@farm.com</span>
-    </div>
-  </div>
 </aside>
 
 <!-- ================= MAIN ================= -->
@@ -46,94 +36,49 @@
   <header class="dashboard-header">
     <button id="openSidebar" class="menu-btn">☰</button>
     <h1>Dashboard</h1>
-
-    <div class="header-actions">
-      <button class="icon-btn">🔔</button>
-      <button class="icon-btn">👤</button>
-      <button class="icon-btn">🚪</button>
-    </div>
   </header>
 
   <!-- CONTENT -->
   <main class="dashboard-content animate-fade">
 
-    <!-- STATS -->
+    <!-- ================= STATS ================= -->
     <div class="stats-grid">
+
       <div class="card stat-card">
         <h3>Total Detections</h3>
-        <p class="stat-value">1,284</p>
-        <span class="stat-change positive">+12%</span>
+        <p class="stat-value" id="totalDetections">0</p>
       </div>
 
       <div class="card stat-card">
         <h3>Diseases Found</h3>
-        <p class="stat-value">847</p>
-        <span class="stat-change positive">+8%</span>
+        <p class="stat-value" id="diseaseCount">0</p>
       </div>
 
       <div class="card stat-card">
-        <h3>Accuracy Rate</h3>
-        <p class="stat-value">94.7%</p>
-        <span class="stat-change positive">+2.3%</span>
+        <h3>Avg Confidence</h3>
+        <p class="stat-value" id="avgConfidence">0%</p>
       </div>
 
       <div class="card stat-card">
-        <h3>Farmers Helped</h3>
-        <p class="stat-value">326</p>
-        <span class="stat-change positive">+18%</span>
+        <h3>Severe Cases</h3>
+        <p class="stat-value" id="severeCount">0</p>
       </div>
+
     </div>
 
-    <!-- GRAPHS -->
+    <!-- ================= GRID ================= -->
     <div class="dashboard-grid">
 
       <!-- DISEASE DISTRIBUTION -->
       <div class="card">
         <h2>Disease Distribution</h2>
-
-        <div class="progress-row">
-          <span>Bacterial Leaf Blight</span>
-          <div class="progress"><div style="width:35%"></div></div>
-          <span>35%</span>
-        </div>
-
-        <div class="progress-row">
-          <span>Brown Spot</span>
-          <div class="progress"><div style="width:25%"></div></div>
-          <span>25%</span>
-        </div>
-
-        <div class="progress-row">
-          <span>Leaf Blast</span>
-          <div class="progress"><div style="width:22%"></div></div>
-          <span>22%</span>
-        </div>
-
-        <div class="progress-row">
-          <span>Others</span>
-          <div class="progress"><div style="width:18%"></div></div>
-          <span>18%</span>
-        </div>
+        <canvas id="distributionChart"></canvas>
       </div>
 
       <!-- RECENT -->
       <div class="card">
         <h2>Recent Detections</h2>
-
-        <div class="recent-item">
-          <span>Bacterial Leaf Blight</span>
-          <small class="moderate">Moderate</small>
-        </div>
-
-        <div class="recent-item">
-          <span>Brown Spot</span>
-          <small class="mild">Mild</small>
-        </div>
-
-        <div class="recent-item">
-          <span>Leaf Blast</span>
-          <small class="severe">Severe</small>
-        </div>
+        <div id="recentList"></div>
 
         <a href="history.html" class="btn btn-outline full-width mt-4">
           View All History
@@ -142,36 +87,10 @@
 
     </div>
 
-    <!-- CHARTS -->
-    <div class="dashboard-grid">
-
-      <!-- WEEKLY -->
-      <div class="card">
-        <h2>Weekly Activity</h2>
-        <div class="bar-chart">
-          <div style="height:65%">Mon</div>
-          <div style="height:45%">Tue</div>
-          <div style="height:80%">Wed</div>
-          <div style="height:55%">Thu</div>
-          <div style="height:90%">Fri</div>
-          <div style="height:40%">Sat</div>
-          <div style="height:70%">Sun</div>
-        </div>
-      </div>
-
-      <!-- ACCURACY -->
-      <div class="card text-center">
-        <h2>Model Accuracy</h2>
-        <div class="circle-chart">
-          <span>94.7%</span>
-        </div>
-      </div>
-
-    </div>
-
   </main>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="js/dashboard.js"></script>
 </body>
 </html>

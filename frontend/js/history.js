@@ -1,10 +1,3 @@
-const data = [
-  { id:1, image:"https://images.unsplash.com/photo-1536304993881-ff6e9eefa2a6", disease:"Bacterial Leaf Blight", severity:"Moderate", confidence:94.7, date:"2024-01-15" },
-  { id:2, image:"https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b", disease:"Brown Spot", severity:"Mild", confidence:89.2, date:"2024-01-14" },
-  { id:3, image:"https://images.unsplash.com/photo-1500382017468-9049fed747ef", disease:"Leaf Blast", severity:"Severe", confidence:97.1, date:"2024-01-13" },
-  { id:4, image:"https://images.unsplash.com/photo-1625246333195-78d9c38ad449", disease:"Healthy", severity:"None", confidence:99.3, date:"2024-01-12" }
-];
-
 const table = document.getElementById("historyTable");
 const searchInput = document.getElementById("searchInput");
 const severityFilter = document.getElementById("severityFilter");
@@ -12,45 +5,81 @@ const emptyState = document.getElementById("emptyState");
 const tableWrapper = document.getElementById("tableWrapper");
 const toggleEmpty = document.getElementById("toggleEmpty");
 
+let allData = [];
 let showEmpty = false;
 
+// ================= FETCH REAL HISTORY =================
+async function loadHistory() {
+  try {
+    const res = await fetch("http://127.0.0.1:8000/history");
+    allData = await res.json();
+    filterData();
+  } catch (err) {
+    console.error("Failed to load history", err);
+    render([]);
+  }
+}
+
+// ================= RENDER TABLE =================
 function render(rows) {
   table.innerHTML = "";
+
   if (rows.length === 0) {
     tableWrapper.classList.add("hidden");
     emptyState.classList.remove("hidden");
     return;
   }
+
   tableWrapper.classList.remove("hidden");
   emptyState.classList.add("hidden");
 
-  rows.forEach(item => {
+  rows.forEach((item, index) => {
+    const date = new Date(item.timestamp).toLocaleString();
+
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td><img src="${item.image}" style="width:48px;height:48px;border-radius:8px;object-fit:cover"></td>
-      <td>${item.disease}</td>
-      <td><span class="badge ${item.severity.toLowerCase()}">${item.severity}</span></td>
-      <td>${item.confidence}%</td>
-      <td>${item.date}</td>
       <td>
-        <button class="btn btn-outline">👁</button>
-        <button class="btn btn-outline">🗑</button>
+        <img 
+          src="http://127.0.0.1:8000${item.original_image}" 
+          style="width:48px;height:48px;border-radius:8px;object-fit:cover"
+        >
+      </td>
+      <td>${item.disease}</td>
+      <td>
+        <span class="badge ${item.severity.toLowerCase()}">
+          ${item.severity}
+        </span>
+      </td>
+      <td>${item.confidence}%</td>
+      <td>${date}</td>
+      <td style="text-align:right">
+        <button class="btn btn-outline" onclick="viewResult(${index})">👁</button>
       </td>
     `;
     table.appendChild(tr);
   });
 }
 
+// ================= FILTER =================
 function filterData() {
-  let filtered = data.filter(d =>
+  let filtered = allData.filter(d =>
     d.disease.toLowerCase().includes(searchInput.value.toLowerCase())
   );
+
   if (severityFilter.value !== "all") {
     filtered = filtered.filter(d => d.severity === severityFilter.value);
   }
+
   render(filtered);
 }
 
+// ================= VIEW RESULT =================
+function viewResult(index) {
+  localStorage.setItem("riceguard_result", JSON.stringify(allData[index]));
+  window.location.href = "result.html";
+}
+
+// ================= EVENTS =================
 searchInput.addEventListener("input", filterData);
 severityFilter.addEventListener("change", filterData);
 
@@ -64,4 +93,5 @@ toggleEmpty.addEventListener("click", () => {
   }
 });
 
-render(data);
+// ================= INIT =================
+loadHistory();

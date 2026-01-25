@@ -8,6 +8,8 @@ ultralytics
 pydantic
 python-multipart
 pandas
+sqlalchemy
+reportlab
 python-dotenv
 requests
 passlib[bcrypt]
@@ -15,3 +17,5 @@ python-jose[cryptography]
 sqlalchemy
 pytest
 scikit-learn
+openai
+websockets
