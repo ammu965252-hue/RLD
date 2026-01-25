@@ -1,5 +1,499 @@
 [
   {
+    "disease": "Stem Rot",
+    "confidence": 77.19,
+    "severity": "Moderate",
+    "lesion_count": 4,
+    "description": "Stem Rot detected with Moderate severity.",
+    "symptoms": [
+      "Stem base rotting",
+      "Lower leaf yellowing",
+      "Partial lodging",
+      "Reduced tillering"
+    ],
+    "treatment": [
+      "Apply fungicide",
+      "Improve aeration",
+      "Remove infected plants",
+      "Drain excess water"
+    ],
+    "prevention": [
+      "Resistant varieties",
+      "Organic matter control",
+      "Soil health improvement",
+      "Water management"
+    ],
+    "original_image": "/uploads/stem-rot-.jpg",
+    "result_image": "/uploads/results/result_stem-rot-.jpg",
+    "timestamp": "2026-01-25T20:23:18.752901"
+  },
+  {
+    "disease": "Tungro",
+    "confidence": 81.34,
+    "severity": "Mild",
+    "lesion_count": 2,
+    "description": "Tungro detected with Mild severity.",
+    "symptoms": [
+      "Light yellowing",
+      "Slight stunting",
+      "Few plants affected",
+      "No yield loss"
+    ],
+    "treatment": [
+      "Monitor vectors",
+      "Remove infected plants",
+      "Light insecticide spray",
+      "Improve nutrition"
+    ],
+    "prevention": [
+      "Resistant varieties",
+      "Weed control",
+      "Timely planting",
+      "Vector monitoring"
+    ],
+    "original_image": "/uploads/tungro.jpg",
+    "result_image": "/uploads/results/result_tungro.jpg",
+    "timestamp": "2026-01-25T20:03:48.498944"
+  },
+  {
+    "disease": "Rice Blast",
+    "confidence": 52.92,
+    "severity": "Mild",
+    "lesion_count": 2,
+    "description": "Rice Blast detected with Mild severity.",
+    "symptoms": [
+      "Small diamond-shaped lesions",
+      "Grey centers on leaves",
+      "Limited spread",
+      "Normal plant vigor"
+    ],
+    "treatment": [
+      "Monitor disease progression",
+      "Preventive fungicide spray",
+      "Avoid excess nitrogen",
+      "Improve drainage"
+    ],
+    "prevention": [
+      "Use resistant varieties",
+      "Balanced fertilization",
+      "Proper plant spacing",
+      "Routine field inspection"
+    ],
+    "original_image": "/uploads/tungro-223.jpg",
+    "result_image": "/uploads/results/result_tungro-223.jpg",
+    "timestamp": "2026-01-25T20:03:47.697677"
+  },
+  {
+    "disease": "Rice Blast",
+    "confidence": 23.26,
+    "severity": "Mild",
+    "lesion_count": 1,
+    "description": "Rice Blast detected with Mild severity.",
+    "symptoms": [
+      "Small diamond-shaped lesions",
+      "Grey centers on leaves",
+      "Limited spread",
+      "Normal plant vigor"
+    ],
+    "treatment": [
+      "Monitor disease progression",
+      "Preventive fungicide spray",
+      "Avoid excess nitrogen",
+      "Improve drainage"
+    ],
+    "prevention": [
+      "Use resistant varieties",
+      "Balanced fertilization",
+      "Proper plant spacing",
+      "Routine field inspection"
+    ],
+    "original_image": "/uploads/test3.jpg",
+    "result_image": "/uploads/results/result_test3.jpg",
+    "timestamp": "2026-01-25T20:03:46.891399"
+  },
+  {
+    "disease": "Rice Blast",
+    "confidence": 61.06,
+    "severity": "Severe",
+    "lesion_count": 11,
+    "description": "Rice Blast detected with Severe severity.",
+    "symptoms": [
+      "Neck blast infection",
+      "Panicle breakage",
+      "Severe stunting",
+      "High yield loss"
+    ],
+    "treatment": [
+      "Immediate fungicide spraying",
+      "Multiple spray schedule",
+      "Destroy severely infected crop",
+      "Consult agriculture expert"
+    ],
+    "prevention": [
+      "Blast-resistant hybrids",
+      "Strict nitrogen control",
+      "Field sanitation",
+      "Avoid infected fields"
+    ],
+    "original_image": "/uploads/test2.jpg",
+    "result_image": "/uploads/results/result_test2.jpg",
+    "timestamp": "2026-01-25T20:03:46.119706"
+  },
+  {
+    "disease": "Stem Rot",
+    "confidence": 77.19,
+    "severity": "Moderate",
+    "lesion_count": 4,
+    "description": "Stem Rot detected with Moderate severity.",
+    "symptoms": [
+      "Stem base rotting",
+      "Lower leaf yellowing",
+      "Partial lodging",
+      "Reduced tillering"
+    ],
+    "treatment": [
+      "Apply fungicide",
+      "Improve aeration",
+      "Remove infected plants",
+      "Drain excess water"
+    ],
+    "prevention": [
+      "Resistant varieties",
+      "Organic matter control",
+      "Soil health improvement",
+      "Water management"
+    ],
+    "original_image": "/uploads/stem-rot-.jpg",
+    "result_image": "/uploads/results/result_stem-rot-.jpg",
+    "timestamp": "2026-01-25T20:03:45.307400"
+  },
+  {
+    "disease": "Leaf Smut",
+    "confidence": 57.92,
+    "severity": "Moderate",
+    "lesion_count": 4,
+    "description": "Leaf Smut detected with Moderate severity.",
+    "symptoms": [
+      "Increased black streaks",
+      "Partial leaf drying",
+      "Reduced photosynthesis",
+      "Yield reduction"
+    ],
+    "treatment": [
+      "Apply fungicide",
+      "Remove infected plants",
+      "Improve drainage",
+      "Reduce humidity"
+    ],
+    "prevention": [
+      "Seed treatment",
+      "Crop rotation",
+      "Soil health management",
+      "Regular monitoring"
+    ],
+    "original_image": "/uploads/leafsmut.jpg",
+    "result_image": "/uploads/results/result_leafsmut.jpg",
+    "timestamp": "2026-01-25T20:03:44.627594"
+  },
+  {
+    "disease": "False Smut",
+    "confidence": 88.92,
+    "severity": "Mild",
+    "lesion_count": 2,
+    "description": "False Smut detected with Mild severity.",
+    "symptoms": [
+      "Few green smut balls",
+      "Limited panicle infection",
+      "Normal grain formation",
+      "No yield impact"
+    ],
+    "treatment": [
+      "Field monitoring",
+      "Avoid excess nitrogen",
+      "Improve aeration",
+      "No immediate chemical spray"
+    ],
+    "prevention": [
+      "Disease-free seeds",
+      "Balanced fertilization",
+      "Proper drainage",
+      "Timely sowing"
+    ],
+    "original_image": "/uploads/KernelSmut-.jpg",
+    "result_image": "/uploads/results/result_KernelSmut-.jpg",
+    "timestamp": "2026-01-25T20:03:43.937113"
+  },
+  {
+    "disease": "Healthy",
+    "confidence": 85.84,
+    "severity": "Mild",
+    "lesion_count": 1,
+    "description": "Healthy detected with Mild severity.",
+    "symptoms": [
+      "Information not available"
+    ],
+    "treatment": [
+      "Consult agriculture expert"
+    ],
+    "prevention": [
+      "General crop care recommended"
+    ],
+    "original_image": "/uploads/healthy.jpg",
+    "result_image": "/uploads/results/result_healthy.jpg",
+    "timestamp": "2026-01-25T20:03:43.198640"
+  },
+  {
+    "disease": "False Smut",
+    "confidence": 81.66,
+    "severity": "Severe",
+    "lesion_count": 7,
+    "description": "False Smut detected with Severe severity.",
+    "symptoms": [
+      "Black smut balls",
+      "Most panicles infected",
+      "Grain completely replaced",
+      "Severe yield loss"
+    ],
+    "treatment": [
+      "Immediate fungicide spray",
+      "Destroy infected crop",
+      "Multiple spray cycles",
+      "Expert consultation"
+    ],
+    "prevention": [
+      "Resistant hybrids",
+      "Strict nitrogen control",
+      "Deep ploughing",
+      "Avoid infected fields"
+    ],
+    "original_image": "/uploads/falsesmut.jpg",
+    "result_image": "/uploads/results/result_falsesmut.jpg",
+    "timestamp": "2026-01-25T20:03:42.627681"
+  },
+  {
+    "disease": "Brown Spot",
+    "confidence": 56.94,
+    "severity": "Severe",
+    "lesion_count": 7,
+    "description": "Brown Spot detected with Severe severity.",
+    "symptoms": [
+      "Heavy leaf spotting",
+      "Complete leaf drying",
+      "Poor grain filling",
+      "Severe yield loss"
+    ],
+    "treatment": [
+      "Immediate fungicide spraying",
+      "Remove infected plants",
+      "Soil correction",
+      "Expert advice"
+    ],
+    "prevention": [
+      "Balanced soil nutrients",
+      "Seed treatment",
+      "Avoid drought stress",
+      "Field sanitation"
+    ],
+    "original_image": "/uploads/brownspot.jpg",
+    "result_image": "/uploads/results/result_brownspot.jpg",
+    "timestamp": "2026-01-25T20:03:41.915434"
+  },
+  {
+    "disease": "Brown Spot",
+    "confidence": 74.76,
+    "severity": "Moderate",
+    "lesion_count": 3,
+    "description": "Brown Spot detected with Moderate severity.",
+    "symptoms": [
+      "Larger circular lesions",
+      "Leaf drying at tips",
+      "Reduced grain quality",
+      "Yield reduction"
+    ],
+    "treatment": [
+      "Spray Mancozeb",
+      "Correct nutrient deficiency",
+      "Remove infected leaves",
+      "Improve irrigation"
+    ],
+    "prevention": [
+      "Resistant varieties",
+      "Crop rotation",
+      "Soil health management",
+      "Regular monitoring"
+    ],
+    "original_image": "/uploads/BROWNSPOT-82-.jpg",
+    "result_image": "/uploads/results/result_BROWNSPOT-82-.jpg",
+    "timestamp": "2026-01-25T20:03:41.638001"
+  },
+  {
+    "disease": "Brown Spot",
+    "confidence": 48.18,
+    "severity": "Moderate",
+    "lesion_count": 3,
+    "description": "Brown Spot detected with Moderate severity.",
+    "symptoms": [
+      "Larger circular lesions",
+      "Leaf drying at tips",
+      "Reduced grain quality",
+      "Yield reduction"
+    ],
+    "treatment": [
+      "Spray Mancozeb",
+      "Correct nutrient deficiency",
+      "Remove infected leaves",
+      "Improve irrigation"
+    ],
+    "prevention": [
+      "Resistant varieties",
+      "Crop rotation",
+      "Soil health management",
+      "Regular monitoring"
+    ],
+    "original_image": "/uploads/brownspot-117-.jpg",
+    "result_image": "/uploads/results/result_brownspot-117-.jpg",
+    "timestamp": "2026-01-25T20:03:40.761883"
+  },
+  {
+    "disease": "Blight",
+    "confidence": 75.35,
+    "severity": "Moderate",
+    "lesion_count": 3,
+    "description": "Blight detected with Moderate severity.",
+    "symptoms": [
+      "Extended yellow-orange streaks",
+      "Leaf rolling",
+      "Reduced tillers",
+      "Yield reduction"
+    ],
+    "treatment": [
+      "Copper-based bactericide",
+      "Remove infected plants",
+      "Improve water management",
+      "Reduce nitrogen input"
+    ],
+    "prevention": [
+      "Resistant varieties",
+      "Field sanitation",
+      "Weed control",
+      "Seed treatment"
+    ],
+    "original_image": "/uploads/blight.jpg",
+    "result_image": "/uploads/results/result_blight.jpg",
+    "timestamp": "2026-01-25T20:03:40.154919"
+  },
+  {
+    "disease": "Healthy",
+    "confidence": 99.0,
+    "severity": "None",
+    "lesion_count": 0,
+    "description": "Healthy rice leaf detected.",
+    "symptoms": [],
+    "treatment": [],
+    "prevention": [
+      "Maintain proper irrigation",
+      "Balanced fertilizer usage",
+      "Regular crop monitoring",
+      "Good field hygiene"
+    ],
+    "original_image": "/uploads/test.jpg",
+    "result_image": "/uploads/test.jpg",
+    "timestamp": "2026-01-25T19:53:06.410002"
+  },
+  {
+    "disease": "Healthy",
+    "confidence": 99.0,
+    "severity": "None",
+    "lesion_count": 0,
+    "description": "Healthy rice leaf detected.",
+    "symptoms": [],
+    "treatment": [],
+    "prevention": [
+      "Maintain proper irrigation",
+      "Balanced fertilizer usage",
+      "Regular crop monitoring",
+      "Good field hygiene"
+    ],
+    "original_image": "/uploads/test.jpg",
+    "result_image": "/uploads/test.jpg",
+    "timestamp": "2026-01-25T19:50:34.171469"
+  },
+  {
+    "disease": "False Smut",
+    "confidence": 88.92,
+    "severity": "Mild",
+    "lesion_count": 2,
+    "description": "False Smut detected with Mild severity.",
+    "symptoms": [
+      "Few green smut balls",
+      "Limited panicle infection",
+      "Normal grain formation",
+      "No yield impact"
+    ],
+    "treatment": [
+      "Field monitoring",
+      "Avoid excess nitrogen",
+      "Improve aeration",
+      "No immediate chemical spray"
+    ],
+    "prevention": [
+      "Disease-free seeds",
+      "Balanced fertilization",
+      "Proper drainage",
+      "Timely sowing"
+    ],
+    "original_image": "/uploads/KernelSmut-.jpg",
+    "result_image": "/uploads/results/result_KernelSmut-.jpg",
+    "timestamp": "2026-01-25T19:14:58.997499"
+  },
+  {
+    "disease": "Healthy",
+    "confidence": 85.84,
+    "severity": "Mild",
+    "lesion_count": 1,
+    "description": "Healthy detected with Mild severity.",
+    "symptoms": [
+      "Information not available"
+    ],
+    "treatment": [
+      "Consult agriculture expert"
+    ],
+    "prevention": [
+      "General crop care recommended"
+    ],
+    "original_image": "/uploads/healthy.jpg",
+    "result_image": "/uploads/results/result_healthy.jpg",
+    "timestamp": "2026-01-25T19:07:22.667396"
+  },
+  {
+    "disease": "Brown Spot",
+    "confidence": 48.18,
+    "severity": "Moderate",
+    "lesion_count": 3,
+    "description": "Brown Spot detected with Moderate severity.",
+    "symptoms": [
+      "Larger circular lesions",
+      "Leaf drying at tips",
+      "Reduced grain quality",
+      "Yield reduction"
+    ],
+    "treatment": [
+      "Spray Mancozeb",
+      "Correct nutrient deficiency",
+      "Remove infected leaves",
+      "Improve irrigation"
+    ],
+    "prevention": [
+      "Resistant varieties",
+      "Crop rotation",
+      "Soil health management",
+      "Regular monitoring"
+    ],
+    "original_image": "/uploads/brownspot-117-.jpg",
+    "result_image": "/uploads/results/result_brownspot-117-.jpg",
+    "timestamp": "2026-01-25T19:05:47.683111"
+  },
+  {
     "disease": "False Smut",
     "confidence": 81.66,
     "severity": "Mild",

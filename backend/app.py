@@ -7,14 +7,17 @@ import json
 import openai
 import smtplib
 from email.mime.text import MIMEText
+from dotenv import load_dotenv
 
-from utils.predict import predict_disease
 from utils.pdf_report import generate_pdf
 from database import SessionLocal
-from models import Feedback, ForumPost
+from models import Feedback, ForumPost, Detection
 
-# Set OpenAI API key (use env var in production)
-openai.api_key = os.getenv("OPENAI_API_KEY", "your-key-here")
+# Load environment variables from .env file
+load_dotenv()
+
+# Set OpenAI API key from environment variable (secure approach)
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
 # =====================================================
 # APP INIT
@@ -50,16 +53,61 @@ app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 # =====================================================
 @app.post("/detect")
 async def detect_disease(file: UploadFile = File(...)):
+    print("📥 Detection request received")
+
     if not file.content_type.startswith("image/"):
+        print("❌ Invalid file type")
         return {"error": "Invalid image file"}
+
+    print(f"📁 Processing file: {file.filename}")
 
     file_path = os.path.join(UPLOAD_DIR, file.filename)
 
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
+    try:
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+        print("✅ File saved successfully")
+    except Exception as e:
+        print(f"❌ File save error: {e}")
+        return {"error": "Failed to save file"}
 
     # 🔥 MODEL PREDICTION
-    result = predict_disease(file_path)
+    try:
+        from utils.predict import predict_disease
+        result = predict_disease(file_path)
+        print(f"✅ Prediction successful: {result['disease']}")
+    except Exception as e:
+        print(f"❌ Prediction error: {e}")
+        return {"error": "Prediction failed"}
+
+    # 💾 SAVE DETECTION TO DATABASE
+    db = SessionLocal()
+    try:
+        detection = Detection(
+            disease=result["disease"],
+            confidence=result["confidence"],
+            severity=result["severity"],
+            image_path=result["original_image"],
+            result_path=result["result_image"]
+        )
+        db.add(detection)
+        db.commit()
+        db.refresh(detection)  # Get the auto-generated ID
+
+        # Add detection ID to response
+        result["detection_id"] = detection.id
+        print(f"✅ Detection saved to database: ID {detection.id}, Disease: {detection.disease}")
+        return result
+
+    except Exception as e:
+        db.rollback()
+        print(f"❌ Database error: {e}")
+        print(f"   Failed to save detection: {result['disease']} - {result['confidence']}%")
+        return result  # Return result even if DB save fails
+    finally:
+        db.close()
+
+    print("📤 Returning result")
     return result
 
 
@@ -148,7 +196,49 @@ def chatbot_response(data: dict):
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=[
-                {"role": "system", "content": "You are an agricultural expert advising on rice diseases. Provide helpful, accurate advice."},
+                {"role": "system", "content": """
+You are RiceGuard AI, a knowledgeable and helpful chatbot specialized ONLY in rice leaf diseases.
+
+YOUR ROLE:
+- Answer any user question related to rice leaf diseases.
+- Help farmers and users understand symptoms, causes, prevention, and treatment of rice leaf diseases.
+- Respond clearly, accurately, and in a friendly manner.
+
+DOMAIN RESTRICTION:
+You must answer ONLY questions related to:
+- Rice leaf diseases
+- Symptoms on rice leaves
+- Causes of rice diseases
+- Disease prevention methods
+- Treatment and management practices
+- Crop care related to rice leaf health
+
+If the user asks anything outside rice leaf disease topics, politely reply:
+"I can help only with questions related to rice leaf diseases."
+
+ANSWERING GUIDELINES:
+- Do not guess or invent information.
+- If the question is unclear, ask a short follow-up question.
+- If information is insufficient, say so honestly.
+- Prefer simple explanations suitable for farmers.
+- Mention the possible disease name when relevant.
+- Suggest general treatment and prevention steps.
+- Add a caution note for severe cases.
+
+SAFETY RULES:
+- Do not provide exact pesticide dosages unless clearly known.
+- Do not promote excessive chemical usage.
+- Prefer safe and sustainable farming practices.
+- For serious or widespread disease, advise consulting an agricultural expert.
+
+TONE & STYLE:
+- Friendly, calm, and supportive
+- Simple language
+- No unnecessary technical jargon
+- Short but informative responses
+
+Your goal is to act as a trusted digital assistant for rice leaf disease guidance.
+"""},
                 {"role": "user", "content": user_message}
             ]
         )

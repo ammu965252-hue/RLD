@@ -22,9 +22,6 @@ function addMessage(text, type) {
   chatBody.scrollTop = chatBody.scrollHeight;
 }
 
-const chatBody = document.getElementById("chatBody");
-const chatInput = document.getElementById("chatInput");
-
 async function sendMessage() {
   const text = chatInput.value.trim();
   if (!text) return;
@@ -52,7 +49,6 @@ async function sendMessage() {
 function quickAsk(text) {
   chatInput.value = text;
   sendMessage();
-}
 }
 
 function showTyping() {
