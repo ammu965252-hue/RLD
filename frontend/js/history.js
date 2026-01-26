@@ -8,7 +8,7 @@ const toggleEmpty = document.getElementById("toggleEmpty");
 let allData = [];
 let showEmpty = false;
 
-// ================= FETCH REAL HISTORY =================
+// ================= FETCH HISTORY =================
 async function loadHistory() {
   try {
     const res = await fetch("http://127.0.0.1:8000/history");
@@ -20,7 +20,14 @@ async function loadHistory() {
   }
 }
 
-// ================= RENDER TABLE =================
+// ================= SAFE DATE =================
+function formatDate(ts) {
+  if (!ts) return "—";
+  const d = new Date(ts);
+  return isNaN(d.getTime()) ? "—" : d.toLocaleString();
+}
+
+// ================= RENDER =================
 function render(rows) {
   table.innerHTML = "";
 
@@ -33,27 +40,23 @@ function render(rows) {
   tableWrapper.classList.remove("hidden");
   emptyState.classList.add("hidden");
 
-  rows.forEach((item, index) => {
-    const date = new Date(item.timestamp).toLocaleString();
-
+  rows.forEach(item => {
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>
         <img 
-          src="http://127.0.0.1:8000${item.original_image}" 
-          style="width:48px;height:48px;border-radius:8px;object-fit:cover"
-        >
+          src="http://127.0.0.1:8000${item.original_image || ''}" 
+          width="48" height="48"
+          onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIGZpbGw9IiNFRUVFRUUiLz48dGV4dCB4PSIyNCIgeT0iMjQiIGZpbGw9IiM5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg=='"
+        />
       </td>
       <td>${item.disease}</td>
-      <td>
-        <span class="badge ${item.severity.toLowerCase()}">
-          ${item.severity}
-        </span>
-      </td>
+      <td><span class="badge ${item.severity.toLowerCase()}">${item.severity}</span></td>
       <td>${item.confidence}%</td>
-      <td>${date}</td>
+      <td>${formatDate(item.timestamp)}</td>
       <td style="text-align:right">
-        <button class="btn btn-outline" onclick="viewResult(${index})">👁</button>
+        <button class="btn btn-outline" onclick='viewResult(${JSON.stringify(item)})'>👁</button>
+        <button class="btn btn-danger" onclick="deleteDetection(${item.id})">🗑️</button>
       </td>
     `;
     table.appendChild(tr);
@@ -74,9 +77,29 @@ function filterData() {
 }
 
 // ================= VIEW RESULT =================
-function viewResult(index) {
-  localStorage.setItem("riceguard_result", JSON.stringify(allData[index]));
+function viewResult(item) {
+  localStorage.setItem("riceguard_result", JSON.stringify(item));
   window.location.href = "result.html";
+}
+
+// ================= DELETE =================
+async function deleteDetection(id) {
+  if (!confirm("Delete this detection permanently?")) return;
+
+  try {
+    const res = await fetch(`http://127.0.0.1:8000/delete/${id}`, { method: "DELETE" });
+
+    if (!res.ok) {
+      alert("This detection no longer exists.");
+      loadHistory();
+      return;
+    }
+
+    alert("Detection deleted");
+    loadHistory();
+  } catch (err) {
+    alert("Delete failed");
+  }
 }
 
 // ================= EVENTS =================
@@ -85,12 +108,8 @@ severityFilter.addEventListener("change", filterData);
 
 toggleEmpty.addEventListener("click", () => {
   showEmpty = !showEmpty;
-  if (showEmpty) {
-    tableWrapper.classList.add("hidden");
-    emptyState.classList.remove("hidden");
-  } else {
-    filterData();
-  }
+  tableWrapper.classList.toggle("hidden", showEmpty);
+  emptyState.classList.toggle("hidden", !showEmpty);
 });
 
 // ================= INIT =================

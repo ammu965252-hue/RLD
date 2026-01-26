@@ -1,6 +1,5 @@
 import os
 import cv2
-import json
 from datetime import datetime
 from ultralytics import YOLO
 
@@ -12,7 +11,6 @@ MODEL_PATH = os.path.join(BASE_DIR, "model", "best.pt")
 
 UPLOAD_DIR = os.path.join(BASE_DIR, "uploads")
 RESULT_DIR = os.path.join(UPLOAD_DIR, "results")
-HISTORY_FILE = os.path.join(BASE_DIR, "history.json")
 
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 os.makedirs(RESULT_DIR, exist_ok=True)
@@ -491,20 +489,6 @@ DISEASE_INFO = {
 }
 
 # =====================================================
-# SAVE HISTORY
-# =====================================================
-def save_history(entry):
-    history = []
-    if os.path.exists(HISTORY_FILE):
-        with open(HISTORY_FILE, "r") as f:
-            history = json.load(f)
-
-    history.insert(0, entry)
-
-    with open(HISTORY_FILE, "w") as f:
-        json.dump(history, f, indent=2)
-
-# =====================================================
 # PREDICTION FUNCTION
 # =====================================================
 def predict_disease(image_path: str):
@@ -535,9 +519,8 @@ def predict_disease(image_path: str):
             "prevention": DISEASE_INFO["Healthy"]["None"]["prevention"],
             "original_image": f"/uploads/{filename}",
             "result_image": f"/uploads/{filename}",
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
         }
-        save_history(response)
         return response
 
     # ================= BOX & CLASS =================
@@ -577,8 +560,7 @@ def predict_disease(image_path: str):
         "prevention": info["prevention"],
         "original_image": f"/uploads/{filename}",
         "result_image": f"/uploads/results/{result_filename}",
-        "timestamp": datetime.now().isoformat()
+        "timestamp": datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
     }
 
-    save_history(response)
     return response

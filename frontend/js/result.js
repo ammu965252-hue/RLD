@@ -1,47 +1,64 @@
 const analyzing = document.getElementById("analyzing");
 const resultPage = document.getElementById("resultPage");
 
+// ================= SHOW RESULT PAGE =================
 setTimeout(() => {
   analyzing.classList.add("hidden");
   resultPage.classList.remove("hidden");
-}, 1500);
+}, 1200);
 
+// ================= LOAD RESULT =================
 const result = JSON.parse(localStorage.getItem("riceguard_result"));
 
-if (!result) {
+if (!result || !result.disease) {
   alert("No detection data found");
   window.location.href = "index.html";
 }
 
-// TEXT
+// ================= TEXT DATA =================
 document.getElementById("diseaseName").innerText = result.disease;
-document.getElementById("severity").innerText = result.severity;
-document.getElementById("description").innerText = result.description;
+document.getElementById("severity").innerText = result.severity || "—";
+document.getElementById("description").innerText =
+  result.description || "No description available";
 
-// CONFIDENCE BAR
+// ================= CONFIDENCE =================
 document.getElementById("confidenceBar").style.width =
-  result.confidence + "%";
+  (result.confidence || 0) + "%";
 
-// LABEL
+// ================= LABEL =================
 document.getElementById("detectionLabel").innerText =
-  result.disease + " Detected";
+  `${result.disease} Detected`;
 
-// IMAGES
-document.getElementById("originalImg").src =
-  "http://127.0.0.1:8000" + result.original_image;
+// ================= IMAGES =================
+const baseURL = "http://127.0.0.1:8000";
 
-document.getElementById("detectImg").src =
-  "http://127.0.0.1:8000" + result.result_image;
+setImage("originalImg", result.original_image);
+setImage("detectImg", result.result_image);
+setImage("heatmapImg", result.result_image);
 
-document.getElementById("heatmapImg").src =
-  "http://127.0.0.1:8000" + result.result_image;
+function setImage(id, path) {
+  const img = document.getElementById(id);
+  if (!path) {
+    img.src = placeholderImage();
+    return;
+  }
 
-// CLEAR LISTS
+  img.src = baseURL + path;
+  img.onerror = () => {
+    img.src = placeholderImage();
+  };
+}
+
+function placeholderImage() {
+  return "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI0U1RTVFNSI+PHRleHQgeD0iMTAwIiB5PSIxMDAiIGZvbnQtc2l6ZT0iMTQiIGZpbGw9IiM5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg==";
+}
+
+// ================= CLEAR LISTS =================
 ["symptoms", "treatment", "prevention"].forEach(id => {
   document.getElementById(id).innerHTML = "";
 });
 
-// POPULATE
+// ================= POPULATE LISTS =================
 (result.symptoms || []).forEach(s =>
   document.getElementById("symptoms").innerHTML += `<li>${s}</li>`
 );
@@ -54,85 +71,71 @@ document.getElementById("heatmapImg").src =
   document.getElementById("prevention").innerHTML += `<li>${p}</li>`
 );
 
-// FEEDBACK SYSTEM
-document.getElementById("feedbackForm").addEventListener("submit", async (e) => {
+// ================= FEEDBACK =================
+document.getElementById("feedbackForm").addEventListener("submit", async e => {
   e.preventDefault();
+
   const rating = document.querySelector('input[name="rating"]:checked')?.value;
   const comments = document.getElementById("comments").value;
-  if (!rating) return alert("Please select a rating");
 
-  await fetch("http://127.0.0.1:8000/feedback", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      detection_id: result.timestamp,
-      rating: parseInt(rating),
-      comments
-    })
-  });
-  alert("Thank you for your feedback!");
+  if (!rating) {
+    alert("Please select a rating");
+    return;
+  }
+
+  if (!result.detection_id) {
+    alert("Cannot submit feedback: missing detection ID");
+    return;
+  }
+
+  try {
+    const res = await fetch(`${baseURL}/feedback`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        detection_id: result.detection_id,
+        rating: parseInt(rating),
+        comments
+      })
+    });
+
+    if (!res.ok) throw new Error("Feedback failed");
+
+    alert("Thank you for your feedback!");
+    document.getElementById("feedbackForm").reset();
+  } catch (err) {
+    console.error(err);
+    alert("Failed to submit feedback");
+  }
 });
 
-// DOWNLOAD REPORT
+// ================= DOWNLOAD REPORT =================
 document.getElementById("downloadReport").addEventListener("click", async () => {
   try {
-    const response = await fetch("http://127.0.0.1:8000/generate_report", {
+    const res = await fetch(`${baseURL}/generate_report`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(result)
     });
-    const data = await response.json();
+
+    if (!res.ok) throw new Error();
+
+    const data = await res.json();
     const link = document.createElement("a");
-    link.href = "http://127.0.0.1:8000" + data.file_url;
-    link.download = "detection_report.pdf";
+    link.href = baseURL + data.file_url;
+    link.download = "riceguard_report.pdf";
     link.click();
-  } catch (error) {
+  } catch {
     alert("Failed to generate report");
   }
 });
 
-// SHARE
+// ================= SHARE =================
 document.getElementById("shareResult").addEventListener("click", () => {
   if (navigator.share) {
     navigator.share({
       title: "RiceGuard AI Detection Result",
-      text: `Check out this disease detection result: ${result.disease}`,
-      url: window.location.href
-    });
-  } else {
-    navigator.clipboard.writeText(window.location.href);
-    alert("Link copied to clipboard!");
-  }
-});
-
-// DOWNLOAD REPORT
-document.getElementById("downloadReport").addEventListener("click", async () => {
-  try {
-    const response = await fetch("http://127.0.0.1:8000/generate_report", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(result)
-    });
-    const data = await response.json();
-    const link = document.createElement("a");
-    link.href = "http://127.0.0.1:8000" + data.file_url;
-    link.download = "detection_report.pdf";
-    link.click();
-  } catch (error) {
-    alert("Failed to generate report");
-  }
-});
-
-// SHARE
-document.getElementById("shareResult").addEventListener("click", () => {
-  if (navigator.share) {
-    navigator.share({
-      title: "RiceGuard AI Detection Result",
-      text: `Check out this disease detection result: ${result.disease}`,
+      text: `Disease detected: ${result.disease}`,
       url: window.location.href
     });
   } else {
