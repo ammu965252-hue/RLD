@@ -23,8 +23,21 @@ async function loadHistory() {
 // ================= SAFE DATE =================
 function formatDate(ts) {
   if (!ts) return "—";
+  // If timestamp is already formatted (from backend), return as is
+  if (typeof ts === 'string' && !isNaN(Date.parse(ts))) {
+    return ts;
+  }
+  // Otherwise try to parse and format
   const d = new Date(ts);
-  return isNaN(d.getTime()) ? "—" : d.toLocaleString();
+  return isNaN(d.getTime()) ? "—" : d.toLocaleString('en-IN', { 
+    year: 'numeric',
+    month: '2-digit', 
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: true
+  });
 }
 
 // ================= RENDER =================
@@ -45,7 +58,7 @@ function render(rows) {
     tr.innerHTML = `
       <td>
         <img 
-          src="http://127.0.0.1:8000${item.original_image || ''}" 
+          src="http://127.0.0.1:8000${item.original_image || ''}"
           width="48" height="48"
           onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIGZpbGw9IiNFRUVFRUUiLz48dGV4dCB4PSIyNCIgeT0iMjQiIGZpbGw9IiM5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg=='"
         />

@@ -6,11 +6,29 @@ import os
 import smtplib
 from email.mime.text import MIMEText
 from dotenv import load_dotenv
+import pytz
+from passlib.context import CryptContext
 
 from utils.pdf_report import generate_pdf
 from database import SessionLocal
-from models import Feedback, ForumPost, Detection
+from models import Feedback, ForumPost, Detection, User
 from utils.predict import DISEASE_INFO
+
+# IST Timezone
+IST = pytz.timezone('Asia/Kolkata')
+
+# =====================================================
+# PASSWORD HASHING SETUP
+# =====================================================
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+def hash_password(password: str) -> str:
+    """Hash a password using bcrypt"""
+    return pwd_context.hash(password)
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    """Verify a plain password against its hashed version"""
+    return pwd_context.verify(plain_password, hashed_password)
 
 # Load environment variables from .env file
 load_dotenv()
@@ -27,7 +45,7 @@ app = FastAPI(title="RiceGuard AI Backend")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://127.0.0.1:8001", "http://localhost:8001"],  # Restricted to specific frontend origins
+    allow_origins=["http://127.0.0.1:8000", "http://localhost:8000", "http://127.0.0.1:8001", "http://localhost:8001"],  # Restricted to specific frontend origins
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -49,16 +67,93 @@ os.makedirs(RESULT_DIR, exist_ok=True)
 app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 
 # =====================================================
+# AUTHENTICATION SYSTEM
+# =====================================================
+@app.post("/register")
+def register_user(data: dict):
+    """
+    Register a new user
+    - Accepts: full_name, email, password
+    - Returns: user details or error message
+    """
+    db = SessionLocal()
+    try:
+        # Check if email already exists
+        existing_user = db.query(User).filter(User.email == data.get("email")).first()
+        if existing_user:
+            return {"error": "Email already registered"}, 400
+        
+        # Hash password and create new user
+        hashed_password = hash_password(data.get("password", ""))
+        new_user = User(
+            full_name=data.get("full_name"),
+            email=data.get("email"),
+            password=hashed_password,
+            is_active=True
+        )
+        
+        db.add(new_user)
+        db.commit()
+        db.refresh(new_user)
+        
+        return {
+            "message": "User registered successfully",
+            "user_id": new_user.id,
+            "email": new_user.email,
+            "full_name": new_user.full_name
+        }
+    except Exception as e:
+        db.rollback()
+        return {"error": f"Registration failed: {str(e)}"}, 500
+    finally:
+        db.close()
+
+@app.post("/login")
+def login_user(data: dict):
+    """
+    Login user with email and password
+    - Accepts: email, password
+    - Returns: user details if valid, 401 if invalid
+    """
+    db = SessionLocal()
+    try:
+        email = data.get("email", "").strip().lower()
+        password = data.get("password", "")
+        
+        # Find user by email (case-insensitive)
+        user = db.query(User).filter(User.email == email).first()
+        
+        if not user:
+            return {"error": "Invalid email or password"}, 401
+        
+        # Verify password
+        if not verify_password(password, user.password):
+            return {"error": "Invalid email or password"}, 401
+        
+        return {
+            "message": "Login successful",
+            "user_id": user.id,
+            "full_name": user.full_name,
+            "email": user.email
+        }
+    except Exception as e:
+        return {"error": f"Login failed: {str(e)}"}, 500
+    finally:
+        db.close()
+
+# =====================================================
 # DETECT API
 # =====================================================
 @app.post("/detect")
 async def detect_disease(file: UploadFile = File(...)):
     print("📥 Detection request received")
+    print(f"📄 File: {file.filename}")
 
-    # Secure file upload validation
-    allowed_types = ["image/jpeg", "image/png", "image/webp"]
-    if file.content_type not in allowed_types:
-        print("❌ Invalid file type")
+    # Validate file extension
+    allowed_extensions = [".jpg", ".jpeg", ".png", ".webp"]
+    file_ext = os.path.splitext(file.filename)[1].lower()
+    if file_ext not in allowed_extensions:
+        print(f"❌ Invalid file extension: {file_ext}")
         return {"error": "Only JPEG, PNG, and WebP images are allowed"}
 
     # Check file size (5MB limit)
@@ -75,8 +170,9 @@ async def detect_disease(file: UploadFile = File(...)):
     file_path = os.path.join(UPLOAD_DIR, file.filename)
 
     try:
+        file_content = await file.read()
         with open(file_path, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
+            buffer.write(file_content)
         print("✅ File saved successfully")
     except Exception as e:
         print(f"❌ File save error: {e}")
@@ -88,8 +184,10 @@ async def detect_disease(file: UploadFile = File(...)):
         result = predict_disease(file_path)
         print(f"✅ Prediction successful: {result['disease']}")
     except Exception as e:
+        import traceback
         print(f"❌ Prediction error: {e}")
-        return {"error": "Prediction failed"}
+        print(f"❌ Full traceback: {traceback.format_exc()}")
+        return {"error": f"Prediction failed: {str(e)}"}
 
     # 💾 SAVE DETECTION TO DATABASE
     db = SessionLocal()
@@ -141,7 +239,7 @@ def get_history():
                 "severity": d.severity,
                 "original_image": d.image_path,
                 "result_image": d.result_path,
-                "timestamp": d.created_at.isoformat()  # Convert datetime to ISO string
+                "timestamp": d.created_at.replace(tzinfo=pytz.UTC).astimezone(IST).strftime("%Y-%m-%d %H:%M:%S")
             }
             for d in detections
         ]
@@ -207,7 +305,7 @@ def admin_overview(request: Request):
                 {
                     "rating": f.rating,
                     "comments": f.comments,
-                    "created_at": f.created_at.strftime("%Y-%m-%d %H:%M:%S")
+                    "created_at": f.created_at.replace(tzinfo=pytz.UTC).astimezone(IST).strftime("%Y-%m-%d %H:%M:%S")
                 }
                 for f in feedback_list
             ]
@@ -217,7 +315,7 @@ def admin_overview(request: Request):
                 "disease": d.disease,
                 "confidence": d.confidence,
                 "severity": d.severity,
-                "created_at": d.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+                "created_at": d.created_at.replace(tzinfo=pytz.UTC).astimezone(IST).strftime("%Y-%m-%d %H:%M:%S"),
                 "image_path": d.image_path,
                 "result_path": d.result_path,
                 "feedback": feedback_data

@@ -1,7 +1,13 @@
 import os
 import cv2
 from datetime import datetime
+import pytz
 from ultralytics import YOLO
+
+# =====================================================
+# IST TIMEZONE
+# =====================================================
+IST = pytz.timezone('Asia/Kolkata')
 
 # =====================================================
 # BASE PATHS
@@ -519,7 +525,7 @@ def predict_disease(image_path: str):
             "prevention": DISEASE_INFO["Healthy"]["None"]["prevention"],
             "original_image": f"/uploads/{filename}",
             "result_image": f"/uploads/{filename}",
-            "timestamp": datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+            "timestamp": datetime.now(IST).strftime("%Y-%m-%d %H:%M:%S")
         }
         return response
 
@@ -560,7 +566,7 @@ def predict_disease(image_path: str):
         "prevention": info["prevention"],
         "original_image": f"/uploads/{filename}",
         "result_image": f"/uploads/results/{result_filename}",
-        "timestamp": datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+        "timestamp": datetime.now(IST).strftime("%Y-%m-%d %H:%M:%S")
     }
 
     return response

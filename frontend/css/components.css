@@ -30,6 +30,19 @@
   color: var(--primary);
 }
 
+/* PROFILE SECTION */
+.profile-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.user-name {
+  font-weight: 500;
+  color: var(--text-main);
+  font-size: 14px;
+}
+
 /* BUTTONS */
 .btn {
   padding: 10px 18px;

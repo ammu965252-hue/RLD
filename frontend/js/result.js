@@ -1,10 +1,11 @@
 const analyzing = document.getElementById("analyzing");
 const resultPage = document.getElementById("resultPage");
+const baseURL = "http://127.0.0.1:8000";
 
 // ================= SHOW RESULT PAGE =================
 setTimeout(() => {
-  analyzing.classList.add("hidden");
-  resultPage.classList.remove("hidden");
+  analyzing?.classList.add("hidden");
+  resultPage?.classList.remove("hidden");
 }, 1200);
 
 // ================= LOAD RESULT =================
@@ -30,14 +31,14 @@ document.getElementById("detectionLabel").innerText =
   `${result.disease} Detected`;
 
 // ================= IMAGES =================
-const baseURL = "http://127.0.0.1:8000";
-
 setImage("originalImg", result.original_image);
 setImage("detectImg", result.result_image);
 setImage("heatmapImg", result.result_image);
 
 function setImage(id, path) {
   const img = document.getElementById(id);
+  if (!img) return;
+
   if (!path) {
     img.src = placeholderImage();
     return;
@@ -55,28 +56,31 @@ function placeholderImage() {
 
 // ================= CLEAR LISTS =================
 ["symptoms", "treatment", "prevention"].forEach(id => {
-  document.getElementById(id).innerHTML = "";
+  const el = document.getElementById(id);
+  if (el) el.innerHTML = "";
 });
 
 // ================= POPULATE LISTS =================
 (result.symptoms || []).forEach(s =>
-  document.getElementById("symptoms").innerHTML += `<li>${s}</li>`
+  document.getElementById("symptoms")?.insertAdjacentHTML("beforeend", `<li>${s}</li>`)
 );
 
 (result.treatment || []).forEach(t =>
-  document.getElementById("treatment").innerHTML += `<li>${t}</li>`
+  document.getElementById("treatment")?.insertAdjacentHTML("beforeend", `<li>${t}</li>`)
 );
 
 (result.prevention || []).forEach(p =>
-  document.getElementById("prevention").innerHTML += `<li>${p}</li>`
+  document.getElementById("prevention")?.insertAdjacentHTML("beforeend", `<li>${p}</li>`)
 );
 
 // ================= FEEDBACK =================
-document.getElementById("feedbackForm").addEventListener("submit", async e => {
+const feedbackForm = document.getElementById("feedbackForm");
+
+feedbackForm?.addEventListener("submit", async e => {
   e.preventDefault();
 
   const rating = document.querySelector('input[name="rating"]:checked')?.value;
-  const comments = document.getElementById("comments").value;
+  const comments = document.getElementById("comments")?.value || "";
 
   if (!rating) {
     alert("Please select a rating");
@@ -84,7 +88,7 @@ document.getElementById("feedbackForm").addEventListener("submit", async e => {
   }
 
   if (!result.detection_id) {
-    alert("Cannot submit feedback: missing detection ID");
+    alert("Feedback unavailable for old records");
     return;
   }
 
@@ -99,18 +103,16 @@ document.getElementById("feedbackForm").addEventListener("submit", async e => {
       })
     });
 
-    if (!res.ok) throw new Error("Feedback failed");
-
+    if (!res.ok) throw new Error();
     alert("Thank you for your feedback!");
-    document.getElementById("feedbackForm").reset();
-  } catch (err) {
-    console.error(err);
+    feedbackForm.reset();
+  } catch {
     alert("Failed to submit feedback");
   }
 });
 
 // ================= DOWNLOAD REPORT =================
-document.getElementById("downloadReport").addEventListener("click", async () => {
+document.getElementById("downloadReport")?.addEventListener("click", async () => {
   try {
     const res = await fetch(`${baseURL}/generate_report`, {
       method: "POST",
@@ -119,8 +121,8 @@ document.getElementById("downloadReport").addEventListener("click", async () => 
     });
 
     if (!res.ok) throw new Error();
-
     const data = await res.json();
+
     const link = document.createElement("a");
     link.href = baseURL + data.file_url;
     link.download = "riceguard_report.pdf";
@@ -131,7 +133,7 @@ document.getElementById("downloadReport").addEventListener("click", async () => 
 });
 
 // ================= SHARE =================
-document.getElementById("shareResult").addEventListener("click", () => {
+document.getElementById("shareResult")?.addEventListener("click", () => {
   if (navigator.share) {
     navigator.share({
       title: "RiceGuard AI Detection Result",

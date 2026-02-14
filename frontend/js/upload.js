@@ -78,11 +78,17 @@ async function detectDisease() {
       body: formData
     });
 
+    const result = await response.json();
+    
     if (!response.ok) {
-      throw new Error("Server error");
+      console.error("Server error response:", result);
+      throw new Error(result.error || "Server error");
     }
 
-    const result = await response.json();
+    // Check for error in response
+    if (result.error) {
+      throw new Error(result.error);
+    }
 
     // Basic validation
     if (!result.disease) {
@@ -97,7 +103,7 @@ async function detectDisease() {
 
   } catch (error) {
     console.error("Detection error:", error);
-    alert("Detection failed. Please try another image.");
+    alert("Detection failed: " + error.message);
   } finally {
     detectBtn.innerText = "Detect Disease";
     detectBtn.disabled = false;
