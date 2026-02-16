@@ -8,6 +8,8 @@ from email.mime.text import MIMEText
 from dotenv import load_dotenv
 import pytz
 from passlib.context import CryptContext
+from jose import jwt, JWTError
+from datetime import timedelta, datetime
 
 from utils.pdf_report import generate_pdf
 from database import SessionLocal
@@ -54,12 +56,13 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 # Note: debug endpoint defined after `app` is created further below.
 
 
-# Dependency: get current user from Authorization header
+# Dependency: get current user from Authorization header (JWT support)
 def get_current_user(authorization: str | None = Header(None)):
-    """Return the current user based on a simple Bearer token containing the user ID.
+    """Return the current user based on JWT Bearer token.
 
-    This expects the header: `Authorization: Bearer <user_id>`.
-    Returns the `User` SQLAlchemy object or raises HTTPException 401.
+    Accepts header: `Authorization: Bearer <jwt>`.
+    For backward-compatibility, if the bearer token is a plain integer it will be
+    treated as a user id (legacy behavior).
     """
     if not authorization:
         raise HTTPException(status_code=401, detail="Not authenticated")
@@ -70,17 +73,30 @@ def get_current_user(authorization: str | None = Header(None)):
 
     token = parts[1]
 
-    try:
-        user_id = int(token)
-    except Exception:
-        raise HTTPException(status_code=401, detail="Invalid token")
-
+    # Try decode as JWT
+    payload = decode_access_token(token)
     db = SessionLocal()
     try:
-        user = db.query(User).filter(User.id == user_id).first()
-        if not user:
-            raise HTTPException(status_code=401, detail="User not found")
-        return user
+        if payload and ("sub" in payload or "user_id" in payload):
+            uid = payload.get("sub") or payload.get("user_id")
+            try:
+                uid = int(uid)
+            except Exception:
+                raise HTTPException(status_code=401, detail="Invalid token payload")
+            user = db.query(User).filter(User.id == uid).first()
+            if not user:
+                raise HTTPException(status_code=401, detail="User not found")
+            return user
+
+        # Fallback: legacy numeric bearer token
+        try:
+            user_id = int(token)
+            user = db.query(User).filter(User.id == user_id).first()
+            if not user:
+                raise HTTPException(status_code=401, detail="User not found")
+            return user
+        except Exception:
+            raise HTTPException(status_code=401, detail="Invalid token")
     finally:
         db.close()
 
@@ -88,8 +104,7 @@ def get_current_user(authorization: str | None = Header(None)):
 def get_current_user_optional(authorization: str | None = Header(None)):
     """Return the current user or None if no valid Authorization header provided.
 
-    This helper does not raise HTTP exceptions and is suitable for endpoints
-    that accept either an admin token or an authenticated user.
+    Accepts JWT bearer tokens or legacy numeric bearer token.
     """
     if not authorization:
         return None
@@ -97,15 +112,23 @@ def get_current_user_optional(authorization: str | None = Header(None)):
     if len(parts) != 2 or parts[0].lower() != "bearer":
         return None
     token = parts[1]
-    try:
-        user_id = int(token)
-    except Exception:
-        return None
 
+    payload = decode_access_token(token)
     db = SessionLocal()
     try:
-        user = db.query(User).filter(User.id == user_id).first()
-        return user
+        if payload and ("sub" in payload or "user_id" in payload):
+            uid = payload.get("sub") or payload.get("user_id")
+            try:
+                uid = int(uid)
+            except Exception:
+                return None
+            return db.query(User).filter(User.id == uid).first()
+
+        try:
+            user_id = int(token)
+            return db.query(User).filter(User.id == user_id).first()
+        except Exception:
+            return None
     finally:
         db.close()
 
@@ -116,6 +139,31 @@ load_dotenv()
 admin_token = os.getenv("ADMIN_TOKEN")
 if not admin_token:
     raise RuntimeError("ADMIN_TOKEN environment variable is required for admin access")
+
+# JWT / token settings
+SECRET_KEY = os.getenv("SECRET_KEY")
+if not SECRET_KEY:
+    # Generate a temporary key if missing (warning: set SECRET_KEY in production)
+    SECRET_KEY = os.urandom(32).hex()
+
+ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "480"))
+
+def create_access_token(data: dict, expires_delta: timedelta | None = None):
+    to_encode = data.copy()
+    if expires_delta:
+        expire = datetime.utcnow() + expires_delta
+    else:
+        expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    to_encode.update({"exp": expire})
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+
+def decode_access_token(token: str):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        return payload
+    except JWTError:
+        return None
 
 # =====================================================
 # APP INIT
@@ -251,10 +299,18 @@ def login_user(data: dict):
         if not verify_password(password, stored_hash):
             raise HTTPException(status_code=401, detail="Invalid email or password")
 
+        # Create JWT access token
+        token_data = {"sub": str(user.id), "user_id": user.id, "role": getattr(user, "role", "user")}
+        access_token = create_access_token(token_data)
         return {
-            "user_id": user.id,
-            "full_name": user.full_name,
-            "email": user.email
+            "access_token": access_token,
+            "token_type": "bearer",
+            "user": {
+                "user_id": user.id,
+                "full_name": user.full_name,
+                "email": user.email,
+                "role": getattr(user, "role", "user")
+            }
         }
     except HTTPException:
         raise
