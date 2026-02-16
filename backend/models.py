@@ -16,6 +16,7 @@ class User(Base):
     password = Column(String, nullable=True)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
+    role = Column(String, default="user", nullable=False, index=True)
     # Relationship to detections
     detections = relationship("Detection", back_populates="user", cascade="all, delete-orphan")
 

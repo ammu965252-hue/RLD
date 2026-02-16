@@ -358,8 +358,9 @@ def delete_detection(detection_id: int, current_user: User = Depends(get_current
             raise HTTPException(status_code=404, detail="Detection not found")
 
         # Allow deletion if requestor is admin (via X-Admin-Token) or owner of the detection
-        is_admin = x_admin_token is not None and x_admin_token == admin_token
-        if not is_admin and detection.user_id != current_user.id:
+        is_admin_token = x_admin_token is not None and x_admin_token == admin_token
+        is_admin_role = getattr(current_user, "role", None) == "admin"
+        if not (is_admin_token or is_admin_role) and detection.user_id != current_user.id:
             raise HTTPException(status_code=403, detail="Not authorized to delete this detection")
 
         # Delete the detection
@@ -389,10 +390,12 @@ def delete_detection(detection_id: int, current_user: User = Depends(get_current
 # ADMIN OVERVIEW (DATABASE INSPECTION)
 # =====================================================
 @app.get("/admin/overview")
-def admin_overview(request: Request):
-    # Secure admin access with token validation
+def admin_overview(request: Request, current_user: User = Depends(get_current_user)):
+    # Secure admin access: accept either a valid X-Admin-Token header or a user with role 'admin'
     token = request.headers.get("X-Admin-Token")
-    if not token or token != admin_token:
+    is_admin_token = token is not None and token == admin_token
+    is_admin_role = getattr(current_user, "role", None) == "admin"
+    if not (is_admin_token or is_admin_role):
         raise HTTPException(status_code=401, detail="Unauthorized")
     
     db = SessionLocal()
