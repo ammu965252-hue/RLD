@@ -32,11 +32,15 @@ async function sendMessage() {
   showTyping();
 
   try {
+    // Chatbot is a public endpoint - no auth required
     const response = await fetch("http://127.0.0.1:8000/chatbot", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ message: text })
     });
+    if (!response.ok) {
+      throw new Error(`Server error: ${response.status}`);
+    }
     const data = await response.json();
     removeTyping();
     addMessage(data.response, "bot");

@@ -1,4 +1,4 @@
-from fastapi import FastAPI, File, UploadFile, WebSocket, HTTPException, Request
+from fastapi import FastAPI, File, UploadFile, WebSocket, HTTPException, Request, Depends, Header
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 import shutil
@@ -13,6 +13,7 @@ from utils.pdf_report import generate_pdf
 from database import SessionLocal
 from models import Feedback, ForumPost, Detection, User
 from utils.predict import DISEASE_INFO
+from schemas import UserOut, UserUpdate, ChangePassword
 
 # IST Timezone
 IST = pytz.timezone('Asia/Kolkata')
@@ -20,15 +21,68 @@ IST = pytz.timezone('Asia/Kolkata')
 # =====================================================
 # PASSWORD HASHING SETUP
 # =====================================================
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# Use PBKDF2-SHA256 for password hashing to avoid platform-specific bcrypt issues
+pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
+
+
+def _truncate_to_72(plain: str) -> str:
+    """Truncate a UTF-8 string so its encoded bytes are <= 72 bytes.
+
+    This avoids bcrypt errors when input exceeds the 72-byte limit.
+    """
+    if not isinstance(plain, str):
+        return plain
+    b = plain.encode("utf-8")
+    if len(b) <= 72:
+        return plain
+    # truncate bytes then decode ignoring partial characters
+    return b[:72].decode("utf-8", errors="ignore")
+
 
 def hash_password(password: str) -> str:
-    """Hash a password using bcrypt"""
-    return pwd_context.hash(password)
+    """Hash a password using bcrypt, truncating input bytes to 72 if needed."""
+    pwd_input = _truncate_to_72(password)
+    return pwd_context.hash(pwd_input)
+
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """Verify a plain password against its hashed version"""
-    return pwd_context.verify(plain_password, hashed_password)
+    """Verify a plain password against its hashed version using the same truncation."""
+    plain_input = _truncate_to_72(plain_password)
+    return pwd_context.verify(plain_input, hashed_password)
+
+
+# Note: debug endpoint defined after `app` is created further below.
+
+
+# Dependency: get current user from Authorization header
+def get_current_user(authorization: str | None = Header(None)):
+    """Return the current user based on a simple Bearer token containing the user ID.
+
+    This expects the header: `Authorization: Bearer <user_id>`.
+    Returns the `User` SQLAlchemy object or raises HTTPException 401.
+    """
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
+    parts = authorization.split()
+    if len(parts) != 2 or parts[0].lower() != "bearer":
+        raise HTTPException(status_code=401, detail="Invalid authorization header")
+
+    token = parts[1]
+
+    try:
+        user_id = int(token)
+    except Exception:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+    db = SessionLocal()
+    try:
+        user = db.query(User).filter(User.id == user_id).first()
+        if not user:
+            raise HTTPException(status_code=401, detail="User not found")
+        return user
+    finally:
+        db.close()
 
 # Load environment variables from .env file
 load_dotenv()
@@ -45,10 +99,35 @@ app = FastAPI(title="RiceGuard AI Backend")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://127.0.0.1:8000", "http://localhost:8000", "http://127.0.0.1:8001", "http://localhost:8001"],  # Restricted to specific frontend origins
+    allow_origins=["http://localhost:8003", "http://127.0.0.1:8003"],
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Temporary debug endpoint to inspect `pwd_context` at runtime (remove in production)
+@app.get('/__debug_pwd')
+def debug_pwd():
+    try:
+        schemes = []
+        try:
+            schemes = list(pwd_context.schemes())
+        except Exception:
+            # fallback: try to access protected config
+            schemes = getattr(getattr(pwd_context, '_config', {}), 'schemes', [])
+
+        # quick hash/verify test using a short password via helper functions
+        sample = 'short_test_pwd'
+        h = hash_password(sample)
+        ok = verify_password(sample, h)
+
+        return {
+            'schemes_configured': schemes,
+            'sample_hash': h,
+            'sample_verify': ok
+        }
+    except Exception as e:
+        return {'error': str(e)}
 
 # =====================================================
 # PATHS
@@ -74,37 +153,47 @@ def register_user(data: dict):
     """
     Register a new user
     - Accepts: full_name, email, password
-    - Returns: user details or error message
+    - Returns: {"message": "Registration successful"}
     """
     db = SessionLocal()
     try:
+        email = (data.get("email") or "").strip().lower()
+        password = data.get("password") or ""
+        full_name = data.get("full_name")
+
+        if not email:
+            raise HTTPException(status_code=400, detail="Email is required")
+        if not password:
+            raise HTTPException(status_code=400, detail="Password is required")
+
         # Check if email already exists
-        existing_user = db.query(User).filter(User.email == data.get("email")).first()
+        existing_user = db.query(User).filter(User.email == email).first()
         if existing_user:
-            return {"error": "Email already registered"}, 400
-        
-        # Hash password and create new user
-        hashed_password = hash_password(data.get("password", ""))
+            raise HTTPException(status_code=400, detail="Email already registered")
+
+        # Hash password exactly once using passlib CryptContext
+        hashed_password = hash_password(password)
+
+        # Create new user; store hash in `hashed_password` only to avoid double-hashing
         new_user = User(
-            full_name=data.get("full_name"),
-            email=data.get("email"),
-            password=hashed_password,
+            full_name=full_name,
+            email=email,
+            hashed_password=hashed_password,
+            password=None,
             is_active=True
         )
-        
+
         db.add(new_user)
         db.commit()
         db.refresh(new_user)
-        
-        return {
-            "message": "User registered successfully",
-            "user_id": new_user.id,
-            "email": new_user.email,
-            "full_name": new_user.full_name
-        }
+
+        return {"message": "Registration successful"}
+    except HTTPException:
+        db.rollback()
+        raise
     except Exception as e:
         db.rollback()
-        return {"error": f"Registration failed: {str(e)}"}, 500
+        raise HTTPException(status_code=500, detail=f"Registration failed: {str(e)}")
     finally:
         db.close()
 
@@ -113,31 +202,39 @@ def login_user(data: dict):
     """
     Login user with email and password
     - Accepts: email, password
-    - Returns: user details if valid, 401 if invalid
+    - Returns: user_id, full_name, email
     """
     db = SessionLocal()
     try:
-        email = data.get("email", "").strip().lower()
-        password = data.get("password", "")
-        
+        email = (data.get("email") or "").strip().lower()
+        password = data.get("password") or ""
+
+        if not email or not password:
+            raise HTTPException(status_code=400, detail="Email and password are required")
+
         # Find user by email (case-insensitive)
         user = db.query(User).filter(User.email == email).first()
-        
         if not user:
-            return {"error": "Invalid email or password"}, 401
-        
-        # Verify password
-        if not verify_password(password, user.password):
-            return {"error": "Invalid email or password"}, 401
-        
+            raise HTTPException(status_code=401, detail="Invalid email or password")
+
+        # Support legacy `password` field if present, but prefer `hashed_password`
+        stored_hash = getattr(user, "hashed_password", None) or getattr(user, "password", None)
+        if not stored_hash:
+            raise HTTPException(status_code=401, detail="Invalid email or password")
+
+        # Verify using passlib helper (no manual encoding/truncation)
+        if not verify_password(password, stored_hash):
+            raise HTTPException(status_code=401, detail="Invalid email or password")
+
         return {
-            "message": "Login successful",
             "user_id": user.id,
             "full_name": user.full_name,
             "email": user.email
         }
+    except HTTPException:
+        raise
     except Exception as e:
-        return {"error": f"Login failed: {str(e)}"}, 500
+        raise HTTPException(status_code=500, detail=f"Login failed: {str(e)}")
     finally:
         db.close()
 
@@ -145,7 +242,7 @@ def login_user(data: dict):
 # DETECT API
 # =====================================================
 @app.post("/detect")
-async def detect_disease(file: UploadFile = File(...)):
+async def detect_disease(file: UploadFile = File(...), current_user: User = Depends(get_current_user)):
     print("📥 Detection request received")
     print(f"📄 File: {file.filename}")
 
@@ -197,7 +294,8 @@ async def detect_disease(file: UploadFile = File(...)):
             confidence=result["confidence"],
             severity=result["severity"],
             image_path=result["original_image"],
-            result_path=result["result_image"]
+            result_path=result["result_image"],
+            user_id=current_user.id
         )
         db.add(detection)
         db.commit()
@@ -224,12 +322,12 @@ async def detect_disease(file: UploadFile = File(...)):
 # HISTORY API (UPDATED TO READ FROM DATABASE)
 # =====================================================
 @app.get("/history")
-def get_history():
+def get_history(current_user: User = Depends(get_current_user)):
     db = SessionLocal()
     try:
-        # Query all detections from database, ordered by newest first
-        detections = db.query(Detection).order_by(Detection.created_at.desc()).all()
-        
+        # Query detections for the current user only, ordered by newest first
+        detections = db.query(Detection).filter(Detection.user_id == current_user.id).order_by(Detection.created_at.desc()).all()
+
         # Format response to match frontend expectations
         history = [
             {
@@ -252,17 +350,22 @@ def get_history():
 # DELETE DETECTION API
 # =====================================================
 @app.delete("/delete/{detection_id}")
-def delete_detection(detection_id: int):
+def delete_detection(detection_id: int, current_user: User = Depends(get_current_user), x_admin_token: str | None = Header(None)):
     db = SessionLocal()
     try:
         detection = db.query(Detection).filter(Detection.id == detection_id).first()
         if not detection:
             raise HTTPException(status_code=404, detail="Detection not found")
-        
+
+        # Allow deletion if requestor is admin (via X-Admin-Token) or owner of the detection
+        is_admin = x_admin_token is not None and x_admin_token == admin_token
+        if not is_admin and detection.user_id != current_user.id:
+            raise HTTPException(status_code=403, detail="Not authorized to delete this detection")
+
         # Delete the detection
         db.delete(detection)
         db.commit()
-        
+
         # Optionally delete the image files
         try:
             if os.path.exists(os.path.join(BASE_DIR, detection.image_path.lstrip('/'))):
@@ -271,7 +374,7 @@ def delete_detection(detection_id: int):
                 os.remove(os.path.join(BASE_DIR, detection.result_path.lstrip('/')))
         except Exception as e:
             print(f"Warning: Could not delete image files: {e}")
-        
+
         return {"message": "Detection deleted successfully"}
     except HTTPException:
         raise
@@ -342,17 +445,30 @@ def generate_report(data: dict):
 # FEEDBACK SYSTEM
 # =====================================================
 @app.post("/feedback")
-def submit_feedback(data: dict):
+def submit_feedback(data: dict, current_user: User = Depends(get_current_user)):
+    """Submit feedback for a detection (must own the detection)."""
     db = SessionLocal()
-    feedback = Feedback(
-        detection_id=data["detection_id"],
-        rating=data["rating"],
-        comments=data.get("comments", "")
-    )
-    db.add(feedback)
-    db.commit()
-    db.close()
-    return {"message": "Feedback submitted"}
+    try:
+        detection_id = data["detection_id"]
+        
+        # Verify detection exists and belongs to current user
+        detection = db.query(Detection).filter(
+            Detection.id == detection_id,
+            Detection.user_id == current_user.id
+        ).first()
+        if not detection:
+            raise HTTPException(status_code=403, detail="Detection not found or not owned by user")
+        
+        feedback = Feedback(
+            detection_id=str(detection_id),
+            rating=data["rating"],
+            comments=data.get("comments", "")
+        )
+        db.add(feedback)
+        db.commit()
+        return {"message": "Feedback submitted"}
+    finally:
+        db.close()
 
 
 # =====================================================
@@ -360,23 +476,29 @@ def submit_feedback(data: dict):
 # =====================================================
 @app.get("/forum")
 def get_forum_posts():
+    """Get all forum posts (public)."""
     db = SessionLocal()
-    posts = db.query(ForumPost).all()
-    db.close()
-    return [{"id": p.id, "user": p.user, "title": p.title, "content": p.content, "created_at": p.created_at} for p in posts]
+    try:
+        posts = db.query(ForumPost).all()
+        return [{"id": p.id, "user": p.user, "title": p.title, "content": p.content, "created_at": p.created_at} for p in posts]
+    finally:
+        db.close()
 
 @app.post("/forum")
-def add_forum_post(data: dict):
+def add_forum_post(data: dict, current_user: User = Depends(get_current_user)):
+    """Add forum post (authenticated users only)."""
     db = SessionLocal()
-    post = ForumPost(
-        user=data["user"],
-        title=data["title"],
-        content=data["content"]
-    )
-    db.add(post)
-    db.commit()
-    db.close()
-    return {"message": "Post added"}
+    try:
+        post = ForumPost(
+            user=current_user.email,
+            title=data["title"],
+            content=data["content"]
+        )
+        db.add(post)
+        db.commit()
+        return {"message": "Post added"}
+    finally:
+        db.close()
 
 
 # =====================================================
@@ -398,6 +520,9 @@ def chatbot_response(data: dict):
     
     if not detected_disease:
         return {"response": "I can help only with rice leaf diseases. Please specify the disease name."}
+
+
+
     
     # Define intent keywords
     intents = {
@@ -434,6 +559,91 @@ def chatbot_response(data: dict):
 # =====================================================
 # EXPERT CONSULTATION (CONTACT FORM)
 # =====================================================
+@app.get("/me", response_model=UserOut)
+def read_me(current_user: User = Depends(get_current_user)):
+    """Return the authenticated user's profile information.
+
+    Uses `Depends(get_current_user)` and returns 401 if unauthenticated.
+    """
+    return current_user
+
+
+@app.put("/update-profile")
+def update_profile(data: UserUpdate, current_user: User = Depends(get_current_user)):
+    """Update authenticated user's profile (name, nickname, email).
+
+    - Requires authentication via `get_current_user`.
+    - If `email` is changed, ensures uniqueness (400 on conflict).
+    - Commits and refreshes the DB record.
+    - Returns a message and the updated user data (no passwords returned).
+    """
+    db = SessionLocal()
+    try:
+        user = db.query(User).filter(User.id == current_user.id).first()
+        if not user:
+            raise HTTPException(status_code=401, detail="User not found")
+
+        # Handle email change with uniqueness check
+        if data.email and data.email.strip() and data.email != user.email:
+            # Check for existing user with this email
+            existing = db.query(User).filter(User.email == data.email).first()
+            if existing and existing.id != user.id:
+                raise HTTPException(status_code=400, detail="Email already in use")
+            user.email = data.email
+
+        if data.name is not None:
+            user.name = data.name
+
+        if data.nickname is not None:
+            user.nickname = data.nickname
+
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+
+        user_out = UserOut.from_orm(user)
+        return {"message": "Profile updated", "user": user_out}
+    finally:
+        db.close()
+
+
+@app.put("/change-password")
+def change_password(data: ChangePassword, current_user: User = Depends(get_current_user)):
+    """Change password for the authenticated user.
+
+    - Verifies `old_password` using `verify_password`.
+    - Hashes and saves `new_password`.
+    - Returns 400 if old password incorrect, 401 if user not found.
+    """
+    db = SessionLocal()
+    try:
+        user = db.query(User).filter(User.id == current_user.id).first()
+        if not user:
+            raise HTTPException(status_code=401, detail="User not found")
+
+        # Determine which stored field holds the hash (support backward compatibility)
+        stored_hash = None
+        if getattr(user, "hashed_password", None):
+            stored_hash = user.hashed_password
+        elif getattr(user, "password", None):
+            stored_hash = user.password
+
+        if not stored_hash or not verify_password(data.old_password, stored_hash):
+            raise HTTPException(status_code=400, detail="Old password is incorrect")
+
+        new_hashed = hash_password(data.new_password)
+        user.hashed_password = new_hashed
+        # keep the legacy `password` field in sync if present
+        user.password = new_hashed
+
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+
+        return {"message": "Password changed successfully"}
+    finally:
+        db.close()
+
 @app.post("/contact")
 def contact_expert(data: dict):
     try:

@@ -41,24 +41,10 @@ function setImage(id, path) {
 
   if (!path) {
     img.src = placeholderImage();
-    return;
+  } else {
+    img.src = baseURL + path;
   }
-
-  img.src = baseURL + path;
-  img.onerror = () => {
-    img.src = placeholderImage();
-  };
 }
-
-function placeholderImage() {
-  return "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI0U1RTVFNSI+PHRleHQgeD0iMTAwIiB5PSIxMDAiIGZvbnQtc2l6ZT0iMTQiIGZpbGw9IiM5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg==";
-}
-
-// ================= CLEAR LISTS =================
-["symptoms", "treatment", "prevention"].forEach(id => {
-  const el = document.getElementById(id);
-  if (el) el.innerHTML = "";
-});
 
 // ================= POPULATE LISTS =================
 (result.symptoms || []).forEach(s =>
@@ -93,9 +79,10 @@ feedbackForm?.addEventListener("submit", async e => {
   }
 
   try {
+    const headers = { "Content-Type": "application/json", ...(window.getAuthHeaders ? window.getAuthHeaders() : {}) };
     const res = await fetch(`${baseURL}/feedback`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify({
         detection_id: result.detection_id,
         rating: parseInt(rating),
@@ -103,10 +90,18 @@ feedbackForm?.addEventListener("submit", async e => {
       })
     });
 
-    if (!res.ok) throw new Error();
+    if (!res.ok) {
+      if (res.status === 401) {
+        if (window.handle401) window.handle401();
+        else { localStorage.removeItem('riceguard_user'); window.location.href='login.html'; }
+        return;
+      }
+      throw new Error('Failed to submit feedback');
+    }
     alert("Thank you for your feedback!");
     feedbackForm.reset();
-  } catch {
+  } catch (err) {
+    console.error('Feedback error:', err);
     alert("Failed to submit feedback");
   }
 });
@@ -114,20 +109,24 @@ feedbackForm?.addEventListener("submit", async e => {
 // ================= DOWNLOAD REPORT =================
 document.getElementById("downloadReport")?.addEventListener("click", async () => {
   try {
-    const res = await fetch(`${baseURL}/generate_report`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(result)
-    });
-
-    if (!res.ok) throw new Error();
+    const headers = { "Content-Type": "application/json", ...(window.getAuthHeaders ? window.getAuthHeaders() : {}) };
+    const res = await fetch(`${baseURL}/generate_report`, { method: "POST", headers, body: JSON.stringify(result) });
+    if (!res.ok) {
+      if (res.status === 401) {
+        if (window.handle401) window.handle401();
+        else { localStorage.removeItem('riceguard_user'); window.location.href='login.html'; }
+        return;
+      }
+      throw new Error('Request failed');
+    }
     const data = await res.json();
 
     const link = document.createElement("a");
     link.href = baseURL + data.file_url;
     link.download = "riceguard_report.pdf";
     link.click();
-  } catch {
+  } catch (err) {
+    console.error('Report error', err);
     alert("Failed to generate report");
   }
 });

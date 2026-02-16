@@ -6,16 +6,10 @@ const detectBtn = document.getElementById("detectBtn");
 
 let selectedFile = null;
 
-/* ================================
-   OPEN FILE PICKER
-================================ */
 function openFilePicker() {
   fileInput.click();
 }
 
-/* ================================
-   HANDLE FILE SELECTION
-================================ */
 fileInput.addEventListener("change", () => {
   const file = fileInput.files[0];
 
@@ -39,32 +33,23 @@ fileInput.addEventListener("change", () => {
   reader.readAsDataURL(file);
 });
 
-/* ================================
-   REMOVE IMAGE
-================================ */
 function removeImage(e) {
   e.stopPropagation();
-
   previewImage.src = "";
   previewContainer.classList.add("hidden");
   uploadPlaceholder.classList.remove("hidden");
   detectBtn.classList.add("hidden");
-
   fileInput.value = "";
   selectedFile = null;
 }
 
-/* ================================
-   REAL DISEASE DETECTION
-================================ */
 async function detectDisease() {
   if (!selectedFile) {
     alert("Please upload an image first");
     return;
   }
 
-  // Clear previous result
-  localStorage.removeItem("riceguard_result");
+  if (!window.requireAuthOrRedirect()) return;
 
   detectBtn.innerText = "Detecting...";
   detectBtn.disabled = true;
@@ -73,39 +58,34 @@ async function detectDisease() {
   formData.append("file", selectedFile);
 
   try {
+    const headers = window.getAuthHeaders();
+    // Don't set Content-Type header for FormData - browser handles boundary automatically
+
     const response = await fetch("http://127.0.0.1:8000/detect", {
       method: "POST",
-      body: formData
+      headers,
+      body: formData,
     });
 
+    if (response.status === 401) {
+      window.handle401();
+      return;
+    }
+
     const result = await response.json();
-    
+
     if (!response.ok) {
-      console.error("Server error response:", result);
-      throw new Error(result.error || "Server error");
+      throw new Error(result.detail || "Detection failed");
     }
 
-    // Check for error in response
-    if (result.error) {
-      throw new Error(result.error);
-    }
-
-    // Basic validation
-    if (!result.disease) {
-      throw new Error("Invalid response from model");
-    }
-
-    // Save result for result.html
     localStorage.setItem("riceguard_result", JSON.stringify(result));
-
-    // Redirect
     window.location.href = "result.html";
 
   } catch (error) {
     console.error("Detection error:", error);
     alert("Detection failed: " + error.message);
   } finally {
-    detectBtn.innerText = "Detect Disease";
+    detectBtn.innerText = "Detect Disease →";
     detectBtn.disabled = false;
   }
 }

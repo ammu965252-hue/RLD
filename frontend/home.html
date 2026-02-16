@@ -36,7 +36,7 @@
     </div>
 
     <div class="profile-section">
-      <span id="userFullName" class="user-name"></span>
+      <button id="userBtn" class="btn btn-icon">👤</button>
       <button class="btn btn-outline" onclick="logout()">Logout</button>
     </div>
   </div>
@@ -138,13 +138,19 @@
 window.addEventListener("DOMContentLoaded", () => {
   const riceguardUser = localStorage.getItem("riceguard_user");
   
-  if (riceguardUser) {
-    const user = JSON.parse(riceguardUser);
-    const fullName = user.full_name || "User";
-    document.getElementById("userFullName").textContent = `👤 ${fullName}`;
-  } else {
+  if (!riceguardUser) {
     // No user found, redirect to register
     window.location.href = "register.html";
+  }
+});
+
+// User button - redirect to profile
+document.getElementById("userBtn")?.addEventListener("click", () => {
+  const user = localStorage.getItem("riceguard_user");
+  if (!user) {
+    window.location.href = "login.html";
+  } else {
+    window.location.href = "profile.html";
   }
 });
 
@@ -154,6 +160,7 @@ function logout() {
   window.location.href = "login.html";
 }
 </script>
+<script src="js/auth_util.js"></script>
 <script src="js/main.js"></script>
 <script src="js/upload.js"></script>
 </body>

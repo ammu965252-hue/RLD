@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Profile – RiceGuard AI</title>
+
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/pages.css">
+  <link rel="stylesheet" href="css/animations.css">
+</head>
+
+<body>
+
+<script>
+  // Authentication guard - redirect if not logged in
+  const riceguardUser = localStorage.getItem("riceguard_user");
+  if (!riceguardUser) {
+    window.location.href = "login.html";
+  }
+</script>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    🌾 <strong>RiceGuard</strong>
+    <button id="closeSidebar">✖</button>
+  </div>
+
+  <nav class="sidebar-nav">
+    <a href="dashboard.html">📊 Overview</a>
+    <a href="index.html">📷 New Detection</a>
+    <a href="history.html">📁 History</a>
+    <a href="chatbot.html">💬 Chatbot</a>
+    <a href="profile.html" class="active">👤 Profile</a>
+  </nav>
+</aside>
+
+<!-- MAIN -->
+<div class="dashboard-wrapper">
+
+  <header class="dashboard-header">
+    <button id="openSidebar" class="menu-btn">☰</button>
+    <h1>Profile</h1>
+  </header>
+
+  <main class="dashboard-content animate-fade">
+
+    <div class="dashboard-grid">
+
+      <div class="card">
+        <h2>Account Profile</h2>
+
+        <div class="form-row">
+          <label for="email">Email</label>
+          <input id="email" type="email" placeholder="you@example.com" />
+        </div>
+
+        <div class="form-row">
+          <label for="name">Name</label>
+          <input id="name" type="text" placeholder="Full name" />
+        </div>
+
+        <div class="form-row">
+          <label for="nickname">Nickname</label>
+          <input id="nickname" type="text" placeholder="Nickname" />
+        </div>
+
+        <div class="form-actions">
+          <button id="saveProfile" class="btn">Save Profile</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Change Password</h2>
+
+        <div class="form-row">
+          <label for="oldPassword">Old Password</label>
+          <input id="oldPassword" type="password" placeholder="Current password" />
+        </div>
+
+        <div class="form-row">
+          <label for="newPassword">New Password</label>
+          <input id="newPassword" type="password" placeholder="New password" />
+        </div>
+
+        <div class="form-actions">
+          <button id="changePasswordBtn" class="btn btn-danger">Change Password</button>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+</div>
+
+<script src="js/auth_util.js"></script>
+<script src="js/profile.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>

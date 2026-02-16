@@ -3,14 +3,24 @@ document.getElementById("contactForm").addEventListener("submit", async (e) => {
   const email = document.getElementById("email").value;
   const message = document.getElementById("message").value;
 
-  const res = await fetch("http://127.0.0.1:8000/contact", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, message })
-  });
-  const data = await res.json();
-  alert(data.message || data.error);
-});
+  try {
+    // Contact form is a public endpoint - no auth required
+    const res = await fetch("http://127.0.0.1:8000/contact", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, message })
+    });
+    if (!res.ok) {
+      throw new Error(`Server error: ${res.status}`);
+    }
+    const data = await res.json();
+    alert(data.message || data.success || "Message sent successfully!");
+    document.getElementById("contactForm").reset();
+  } catch (error) {
+    console.error("Contact error:", error);
+    alert("Failed to send message: " + error.message);
+  }
+});}
 
 // WEBSOCKET CHAT
 const chatMessages = document.getElementById("chatMessages");

@@ -10,8 +10,26 @@ let showEmpty = false;
 
 // ================= FETCH HISTORY =================
 async function loadHistory() {
+  // Check authentication
+  if (!window.requireAuthOrRedirect || !window.requireAuthOrRedirect()) {
+    return; // Redirects to login if not authenticated
+  }
+
   try {
-    const res = await fetch("http://127.0.0.1:8000/history");
+    // Get auth headers from centralized helper
+    const headers = window.getAuthHeaders ? window.getAuthHeaders() : {};
+    const res = await fetch("http://127.0.0.1:8000/history", { method: "GET", headers });
+    
+    if (!res.ok) {
+      console.error("Failed to load history:", res.status);
+      if (res.status === 401) {
+        if (window.handle401) window.handle401();
+        else window.location.href = 'login.html';
+      }
+      render([]);
+      return;
+    }
+    
     allData = await res.json();
     filterData();
   } catch (err) {
@@ -99,11 +117,24 @@ function viewResult(item) {
 async function deleteDetection(id) {
   if (!confirm("Delete this detection permanently?")) return;
 
+  // Check authentication
+  if (!window.requireAuthOrRedirect || !window.requireAuthOrRedirect()) {
+    return; // Redirects to login if not authenticated
+  }
+
   try {
-    const res = await fetch(`http://127.0.0.1:8000/delete/${id}`, { method: "DELETE" });
+    // Get auth headers from centralized helper
+    const headers = window.getAuthHeaders ? window.getAuthHeaders() : {};
+    const res = await fetch(`http://127.0.0.1:8000/delete/${id}`, { method: "DELETE", headers });
 
     if (!res.ok) {
-      alert("This detection no longer exists.");
+      console.error("Delete failed:", res.status);
+      if (res.status === 401) {
+        if (window.handle401) window.handle401();
+        else window.location.href = 'login.html';
+      } else {
+        alert("This detection no longer exists.");
+      }
       loadHistory();
       return;
     }
@@ -111,7 +142,8 @@ async function deleteDetection(id) {
     alert("Detection deleted");
     loadHistory();
   } catch (err) {
-    alert("Delete failed");
+    console.error("Delete error:", err);
+    alert("Delete failed: " + err.message);
   }
 }
 

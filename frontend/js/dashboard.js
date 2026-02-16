@@ -1,6 +1,24 @@
 async function loadDashboard() {
-  const res = await fetch("http://127.0.0.1:8000/history");
-  const data = await res.json();
+  // Check authentication
+  if (!window.requireAuthOrRedirect || !window.requireAuthOrRedirect()) {
+    return; // Redirects to login if not authenticated
+  }
+
+  try {
+    // Get auth headers from centralized helper
+    const headers = window.getAuthHeaders ? window.getAuthHeaders() : {};
+    const res = await fetch("http://127.0.0.1:8000/history", { method: "GET", headers });
+    
+    if (!res.ok) {
+      console.error("Failed to load dashboard:", res.status);
+      if (res.status === 401) {
+        if (window.handle401) window.handle401();
+        else window.location.href = 'login.html';
+      }
+      return;
+    }
+    
+    const data = await res.json();
 
   // Total detections
   document.getElementById("totalDetections").innerText = data.length;
@@ -71,6 +89,36 @@ async function loadDashboard() {
     `;
     recentList.appendChild(div);
   });
+  } catch (err) {
+    console.error("Failed to load dashboard:", err);
+  }
 }
 
 loadDashboard();
+
+/* ===========================
+   USER BUTTON - REDIRECT TO PROFILE
+   ============================ */
+document.getElementById("userBtn")?.addEventListener("click", () => {
+  const user = localStorage.getItem("riceguard_user");
+  
+  if (!user) {
+    // No token → redirect to login
+    window.location.href = "login.html";
+  } else {
+    // Valid token → redirect to profile
+    window.location.href = "profile.html";
+  }
+});
+
+/* ===========================
+   SIDEBAR TOGGLE
+   ============================ */
+document.getElementById("openSidebar")?.addEventListener("click", () => {
+  document.getElementById("sidebar").classList.add("active");
+});
+
+document.getElementById("closeSidebar")?.addEventListener("click", () => {
+  document.getElementById("sidebar").classList.remove("active");
+});
+
