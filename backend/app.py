@@ -517,6 +517,83 @@ def promote_user(data: dict, request: Request, current_user: User | None = Depen
         db.close()
 
 
+@app.get("/admin/promotions")
+def list_promotions(request: Request,
+                    page: int = 1,
+                    per_page: int = 20,
+                    target_email: str | None = None,
+                    admin_email: str | None = None,
+                    method: str | None = None,
+                    start: str | None = None,
+                    end: str | None = None,
+                    current_user: User | None = Depends(get_current_user_optional)):
+    """List promotion audit entries (admin-only).
+
+    Query parameters:
+    - `page` & `per_page` for pagination
+    - `target_email`, `admin_email`, `method` to filter
+    - `start` and `end` ISO datetimes to filter by created_at
+
+    Access: requires `X-Admin-Token` or a logged-in admin user.
+    """
+    token = request.headers.get("X-Admin-Token")
+    is_admin_token = token is not None and token == admin_token
+    is_admin_role = getattr(current_user, "role", None) == "admin"
+    if not (is_admin_token or is_admin_role):
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+    db = SessionLocal()
+    try:
+        q = db.query(PromotionAudit)
+
+        if target_email:
+            q = q.filter(PromotionAudit.target_email == target_email.strip().lower())
+        if admin_email:
+            q = q.filter(PromotionAudit.admin_email == admin_email.strip().lower())
+        if method:
+            q = q.filter(PromotionAudit.method == method)
+        # Date range filtering (expect ISO format)
+        from datetime import datetime
+        def parse_iso(s):
+            try:
+                return datetime.fromisoformat(s)
+            except Exception:
+                return None
+
+        sdt = parse_iso(start) if start else None
+        edt = parse_iso(end) if end else None
+        if sdt:
+            q = q.filter(PromotionAudit.created_at >= sdt)
+        if edt:
+            q = q.filter(PromotionAudit.created_at <= edt)
+
+        total = q.count()
+        items = q.order_by(PromotionAudit.created_at.desc()).offset((max(page,1)-1)*(max(per_page,1))).limit(max(per_page,1)).all()
+
+        results = [
+            {
+                "id": a.id,
+                "admin_user_id": a.admin_user_id,
+                "admin_email": a.admin_email,
+                "target_user_id": a.target_user_id,
+                "target_email": a.target_email,
+                "method": a.method,
+                "note": a.note,
+                "created_at": a.created_at.isoformat()
+            }
+            for a in items
+        ]
+
+        return {
+            "page": page,
+            "per_page": per_page,
+            "total": total,
+            "items": results
+        }
+    finally:
+        db.close()
+
+
 # =====================================================
 # GENERATE REPORT
 # =====================================================
