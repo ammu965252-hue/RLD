@@ -48,3 +48,15 @@ class ForumPost(Base):
     title = Column(String)
     content = Column(String)
     created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class PromotionAudit(Base):
+    __tablename__ = "promotion_audit"
+    id = Column(Integer, primary_key=True)
+    admin_user_id = Column(Integer, nullable=True, index=True)
+    admin_email = Column(String, nullable=True)
+    target_user_id = Column(Integer, nullable=False, index=True)
+    target_email = Column(String, nullable=False)
+    method = Column(String, nullable=False)  # 'token' or 'role'
+    note = Column(String, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)

@@ -11,7 +11,7 @@ from passlib.context import CryptContext
 
 from utils.pdf_report import generate_pdf
 from database import SessionLocal
-from models import Feedback, ForumPost, Detection, User
+from models import Feedback, ForumPost, Detection, User, PromotionAudit
 from utils.predict import DISEASE_INFO
 from schemas import UserOut, UserUpdate, ChangePassword
 
@@ -80,6 +80,31 @@ def get_current_user(authorization: str | None = Header(None)):
         user = db.query(User).filter(User.id == user_id).first()
         if not user:
             raise HTTPException(status_code=401, detail="User not found")
+        return user
+    finally:
+        db.close()
+
+
+def get_current_user_optional(authorization: str | None = Header(None)):
+    """Return the current user or None if no valid Authorization header provided.
+
+    This helper does not raise HTTP exceptions and is suitable for endpoints
+    that accept either an admin token or an authenticated user.
+    """
+    if not authorization:
+        return None
+    parts = authorization.split()
+    if len(parts) != 2 or parts[0].lower() != "bearer":
+        return None
+    token = parts[1]
+    try:
+        user_id = int(token)
+    except Exception:
+        return None
+
+    db = SessionLocal()
+    try:
+        user = db.query(User).filter(User.id == user_id).first()
         return user
     finally:
         db.close()
@@ -390,7 +415,7 @@ def delete_detection(detection_id: int, current_user: User = Depends(get_current
 # ADMIN OVERVIEW (DATABASE INSPECTION)
 # =====================================================
 @app.get("/admin/overview")
-def admin_overview(request: Request, current_user: User = Depends(get_current_user)):
+def admin_overview(request: Request, current_user: User | None = Depends(get_current_user_optional)):
     # Secure admin access: accept either a valid X-Admin-Token header or a user with role 'admin'
     token = request.headers.get("X-Admin-Token")
     is_admin_token = token is not None and token == admin_token
@@ -433,7 +458,7 @@ def admin_overview(request: Request, current_user: User = Depends(get_current_us
 
 
 @app.post("/admin/promote")
-def promote_user(data: dict, request: Request, current_user: User = Depends(get_current_user)):
+def promote_user(data: dict, request: Request, current_user: User | None = Depends(get_current_user_optional)):
     """Promote a user to admin role.
 
     Accepts JSON with either `user_id` (int) or `email` (string).
@@ -468,6 +493,16 @@ def promote_user(data: dict, request: Request, current_user: User = Depends(get_
 
         user.role = "admin"
         db.add(user)
+        # Prepare audit record
+        audit = PromotionAudit(
+            admin_user_id = getattr(current_user, 'id', None),
+            admin_email = getattr(current_user, 'email', None),
+            target_user_id = user.id,
+            target_email = user.email,
+            method = 'token' if is_admin_token else 'role',
+            note = data.get('note')
+        )
+        db.add(audit)
         db.commit()
 
         return {"message": "User promoted to admin", "user_id": user.id, "email": user.email}

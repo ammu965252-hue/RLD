@@ -10,7 +10,7 @@ Existing tables will not be affected.
 """
 
 from database import Base, engine
-from models import User, Detection, Feedback, ForumPost
+from models import User, Detection, Feedback, ForumPost, PromotionAudit
 
 # Create all tables
 Base.metadata.create_all(bind=engine)
@@ -21,3 +21,4 @@ print("   - users (User model)")
 print("   - detections (Detection model)")
 print("   - feedback (Feedback model)")
 print("   - forum_posts (ForumPost model)")
+print("   - promotion_audit (PromotionAudit model)")
