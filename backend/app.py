@@ -432,6 +432,56 @@ def admin_overview(request: Request, current_user: User = Depends(get_current_us
         db.close()
 
 
+@app.post("/admin/promote")
+def promote_user(data: dict, request: Request, current_user: User = Depends(get_current_user)):
+    """Promote a user to admin role.
+
+    Accepts JSON with either `user_id` (int) or `email` (string).
+    Authorization: requires either a valid `X-Admin-Token` header or a logged-in user with role `admin`.
+    """
+    token = request.headers.get("X-Admin-Token")
+    is_admin_token = token is not None and token == admin_token
+    is_admin_role = getattr(current_user, "role", None) == "admin"
+    if not (is_admin_token or is_admin_role):
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+    user_id = data.get("user_id")
+    email = (data.get("email") or "").strip().lower()
+
+    if not user_id and not email:
+        raise HTTPException(status_code=400, detail="Provide `user_id` or `email` to promote")
+
+    db = SessionLocal()
+    try:
+        user = None
+        if user_id:
+            try:
+                uid = int(user_id)
+            except Exception:
+                raise HTTPException(status_code=400, detail="`user_id` must be an integer")
+            user = db.query(User).filter(User.id == uid).first()
+        else:
+            user = db.query(User).filter(User.email == email).first()
+
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        user.role = "admin"
+        db.add(user)
+        db.commit()
+
+        return {"message": "User promoted to admin", "user_id": user.id, "email": user.email}
+
+    except HTTPException:
+        db.rollback()
+        raise
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Promotion failed: {str(e)}")
+    finally:
+        db.close()
+
+
 # =====================================================
 # GENERATE REPORT
 # =====================================================
