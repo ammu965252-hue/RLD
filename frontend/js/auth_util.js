@@ -19,10 +19,11 @@
 
   function getToken() {
     const user = getStoredUser();
-    if (!user || !user.user_id) {
+    if (!user) {
       return null;
     }
-    return String(user.user_id); // user_id is used as token
+    // Return JWT access token if available, otherwise fall back to user_id for legacy support
+    return user.access_token || (user.user_id ? String(user.user_id) : null);
   }
 
   function getAuthHeaders() {

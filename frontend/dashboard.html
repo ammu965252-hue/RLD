@@ -85,9 +85,24 @@
         <canvas id="distributionChart"></canvas>
       </div>
 
+      <div class="card">
+        <h2>Detections Over Time</h2>
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
+          <button id="trendDaily" class="btn btn-sm">Daily</button>
+          <button id="trendWeekly" class="btn btn-sm">Weekly</button>
+        </div>
+        <canvas id="trendChart"></canvas>
+      </div>
+
+      <div class="card">
+        <h2>Counts Per Disease</h2>
+        <canvas id="barChart"></canvas>
+      </div>
+
       <!-- RECENT -->
       <div class="card">
         <h2>Recent Detections</h2>
+        <div id="filterInfo" style="margin-bottom:8px;display:none;"></div>
         <div id="recentList"></div>
 
         <a href="history.html" class="btn btn-outline full-width mt-4">

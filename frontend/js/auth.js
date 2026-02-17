@@ -37,10 +37,15 @@ if (loginForm) {
         return;
       }
 
-      // 🔥 DIRECTLY STORE BACKEND RESPONSE
-      localStorage.setItem("riceguard_user", JSON.stringify(data));
+      // 🔥 PROPERLY STRUCTURE AND STORE RESPONSE
+      const storedData = {
+        access_token: data.access_token,
+        token_type: data.token_type,
+        ...data.user  // Spread user object so user_id is at top level
+      };
+      localStorage.setItem("riceguard_user", JSON.stringify(storedData));
 
-      console.log("Stored user:", data);
+      console.log("Stored user:", storedData);
 
       window.location.href = "home.html";
 
@@ -132,8 +137,16 @@ if (document.getElementById("registerForm")) {
       const data = await response.json();
 
       if (response.ok) {
-        alert("Account created successfully! Redirecting to login...");
-        window.location.href = "login.html";
+        // Store the JWT token and user data like login does
+        const storedData = {
+          access_token: data.access_token,
+          token_type: data.token_type,
+          ...data.user
+        };
+        localStorage.setItem("riceguard_user", JSON.stringify(storedData));
+        
+        alert("Account created successfully! Redirecting to home...");
+        window.location.href = "home.html";
       } else {
         alert(data.detail || data.error || "Registration failed.");
       }
