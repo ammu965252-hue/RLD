@@ -1,28 +1,29 @@
 :root {
-  /* Brand Colors - Professional */
-  --primary: #1e40af;           /* Deep Blue (Professional) */
-  --primary-dark: #1e3a8a;      /* Darker Blue */
-  --primary-light: #3b82f6;     /* Lighter Blue */
+  /* Brand Colors - Medium Professional */
+  --primary: #3b82f6;           /* Medium Blue (Vibrant & professional) */
+  --primary-dark: #2563eb;      /* Dark Blue (Darker variant) */
+  --primary-light: #60a5fa;     /* Light Blue (Lighter variant) */
+  --secondary: #8b5cf6;         /* Purple (Rich accent) */
   --accent: #10b981;            /* Emerald (Health/Success) */
-  --danger: #dc2626;            /* Red (Severe) */
-  --warning: #f97316;           /* Orange (Moderate) */
-  --info: #0891b2;              /* Cyan (Info) */
+  --danger: #ef4444;            /* Red (Bright & professional) */
+  --warning: #f59e0b;           /* Amber (Gold tone) */
+  --info: #06b6d4;              /* Cyan (Fresh & modern) */
 
   /* Backgrounds */
-  --background: #f9fafb;        /* Off-white (Main) */
-  --background-muted: #f3f4f6;  /* Light Gray (Sections) */
+  --background: #f8fafc;        /* Soft blue-gray tint (Main) */
+  --background-muted: #f1f5f9;  /* Medium light(Sections) */
   --card-bg: #ffffff;           /* Pure White (Cards) */
   --sidebar-bg: #0f172a;        /* Dark Navy (Sidebar) */
 
   /* Text */
-  --text-main: #111827;         /* Dark Gray (Primary text) */
+  --text-main: #1f2937;         /* Medium-Dark Gray (Primary text) */
   --text-muted: #6b7280;        /* Medium Gray (Secondary) */
-  --text-light: #f3f4f6;        /* Light Gray (On dark) */
+  --text-light: #f1f5f9;        /* Light Gray (On dark) */
 
   /* Borders & Radius */
-  --border: #d1d5db;            /* Light Gray Border */
-  --border-dark: #9ca3af;       /* Medium Gray */
-  --divider: #e5e7eb;           /* Subtle divider */
+  --border: #cbd5e1;            /* Soft Blue-Gray Border */
+  --border-dark: #94a3b8;       /* Medium Blue-Gray */
+  --divider: #e2e8f0;           /* Subtle Blue-Gray divider */
   --radius-sm: 6px;
   --radius-md: 10px;
   --radius-lg: 16px;
