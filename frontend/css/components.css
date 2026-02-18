@@ -24,12 +24,7 @@
 .nav-links a:hover {
   color: var(--background);
 }
-}
-
-.nav-links a.active,
-.nav-links a:hover {
-  color: var(--primary);
-}
+/* ensure no duplicate/errant rules below */
 
 /* PROFILE SECTION */
 .profile-section {
