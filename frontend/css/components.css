@@ -3,9 +3,10 @@
   position: sticky;
   top: 0;
   z-index: 50;
-  background: rgba(255,255,255,0.9);
+  background: var(--accent); /* changed from semi-transparent white to green accent */
+  color: var(--text-light);
   backdrop-filter: blur(10px);
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid rgba(0,0,0,0.08);
 }
 
 .navbar-inner {
@@ -15,14 +16,14 @@
   height: 64px;
 }
 
-.nav-links {
-  display: flex;
-  gap: 20px;
-}
-
 .nav-links a {
   font-weight: 500;
-  color: var(--text-muted);
+  color: var(--text-light);
+}
+.nav-links a.active,
+.nav-links a:hover {
+  color: var(--background);
+}
 }
 
 .nav-links a.active,
