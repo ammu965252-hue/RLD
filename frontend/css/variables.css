@@ -10,9 +10,11 @@
   --info: #06b6d4;              /* Cyan (Fresh & modern) */
 
   /* Backgrounds */
-  --background: #f8fafc;        /* Soft blue-gray tint (Main) */
-  --background-muted: #f1f5f9;  /* Medium light(Sections) */
+  --background: #ffffff;        /* Pure White (Main) */
+  --background-muted: #f0f4f8;  /* Distinct Blue-Gray (Sections) */
   --card-bg: #ffffff;           /* Pure White (Cards) */
+  --stat-card-bg: #f0f4f9;      /* Light Blue (Stat cards) */
+  --stat-inner-bg: #dbeafe;     /* Very Light Blue (Stat values) */
   --sidebar-bg: #0f172a;        /* Dark Navy (Sidebar) */
 
   /* Text */
@@ -24,6 +26,7 @@
   --border: #cbd5e1;            /* Soft Blue-Gray Border */
   --border-dark: #94a3b8;       /* Medium Blue-Gray */
   --divider: #e2e8f0;           /* Subtle Blue-Gray divider */
+  --accent-light: rgba(59, 130, 246, 0.1);  /* Blue accent ultra-light */
   --radius-sm: 6px;
   --radius-md: 10px;
   --radius-lg: 16px;
@@ -38,4 +41,20 @@
   /* Fonts */
   --font-main: "Inter", system-ui, -apple-system, sans-serif;
   --font-display: "Poppins", system-ui, sans-serif;
+
+  /* History row color variables (easy to customize) */
+  --history-none-bg: rgba(220, 252, 231, 0.35);
+  --history-none-text: #166534;
+  --history-mild-bg: rgba(209, 250, 229, 0.35);
+  --history-mild-text: #065f46;
+  --history-moderate-bg: rgba(254, 243, 199, 0.35);
+  --history-moderate-text: #92400e;
+  --history-severe-bg: rgba(254, 226, 226, 0.35);
+  --history-severe-text: #991b1b;
+  --history-hover-bg: rgba(0,0,0,0.02);
+  /* Solid accent colors for visible left stripe */
+  --history-none-accent: #16a34a;
+  --history-mild-accent: #059669;
+  --history-moderate-accent: #b45309;
+  --history-severe-accent: #b91c1c;
 }

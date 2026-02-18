@@ -4,9 +4,19 @@ const severityFilter = document.getElementById("severityFilter");
 const emptyState = document.getElementById("emptyState");
 const tableWrapper = document.getElementById("tableWrapper");
 const toggleEmpty = document.getElementById("toggleEmpty");
+const exportBtn = document.getElementById("exportBtn");
+const clearBtn = document.getElementById("clearBtn");
+const confirmModal = document.getElementById("confirmModal");
+const confirmDeleteBtn = document.getElementById("confirmDeleteBtn");
+const cancelDeleteBtn = document.getElementById("cancelDeleteBtn");
+const undoToast = document.getElementById("undoToast");
+const undoBtn = document.getElementById("undoBtn");
 
 let allData = [];
 let showEmpty = false;
+let currentFiltered = [];
+let backupData = null;
+let undoTimer = null;
 
 // ================= FETCH HISTORY =================
 async function loadHistory() {
@@ -31,7 +41,7 @@ async function loadHistory() {
     }
     
     allData = await res.json();
-    filterData();
+      filterData();
   } catch (err) {
     console.error("Failed to load history", err);
     render([]);
@@ -61,6 +71,7 @@ function formatDate(ts) {
 // ================= RENDER =================
 function render(rows) {
   table.innerHTML = "";
+  currentFiltered = rows.slice();
 
   if (rows.length === 0) {
     tableWrapper.classList.add("hidden");
@@ -107,6 +118,114 @@ function filterData() {
   render(filtered);
 }
 
+// ================= EXPORT CSV =================
+function exportCSV() {
+  // Use currently displayed rows
+  const rows = currentFiltered && currentFiltered.length ? currentFiltered : allData;
+  if (!rows || rows.length === 0) {
+    alert('No detections to export');
+    return;
+  }
+
+  const header = ['Image','Disease','Severity','Confidence','Date & Time'];
+  const lines = [header.join(',')];
+
+  rows.forEach(r => {
+    const img = r.original_image ? `http://127.0.0.1:8000${r.original_image}` : '';
+    const disease = (r.disease||'').replace(/"/g,'""');
+    const severity = r.severity || '';
+    const confidence = r.confidence || '';
+    const dt = formatDate(r.timestamp);
+    const line = [`"${img}"`,`"${disease}"`,`"${severity}"`,`"${confidence}"`,`"${dt}"`].join(',');
+    lines.push(line);
+  });
+
+  const csv = lines.join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const date = new Date().toISOString().slice(0,10);
+  a.href = url;
+  a.download = `riceguard-history-${date}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+// ================= SAFE CLEAR / UNDO =================
+function showConfirmModal() { confirmModal.classList.remove('hidden'); }
+function hideConfirmModal() { confirmModal.classList.add('hidden'); }
+function showUndoToast() { undoToast.classList.remove('hidden'); }
+function hideUndoToast() { undoToast.classList.add('hidden'); }
+
+function startUndoCountdown() {
+  // 10 seconds
+  if (undoTimer) clearTimeout(undoTimer);
+  undoTimer = setTimeout(async () => {
+    // commit permanent delete
+    await performPermanentDelete();
+    hideUndoToast();
+    backupData = null;
+    undoTimer = null;
+  }, 10000);
+}
+
+async function performPermanentDelete() {
+  if (!backupData || backupData.length === 0) return;
+  // Call backend delete for each detection id
+  try {
+    const headers = window.getAuthHeaders ? window.getAuthHeaders() : {};
+    // Delete sequentially to detect errors and handle restore if any fail
+    for (const item of backupData) {
+      try {
+        const res = await fetch(`http://127.0.0.1:8000/delete/${item.id}`, { method: 'DELETE', headers });
+        if (!res.ok) throw new Error('Delete failed: ' + res.status);
+      } catch (err) {
+        console.error('Permanent delete failed for id', item.id, err);
+        // Restore UI and inform user
+        allData = backupData.slice();
+        filterData();
+        alert('Failed to permanently delete detections. Restored locally. Error: ' + err.message);
+        return;
+      }
+    }
+    // If all succeeded, reload history from backend to ensure consistency
+    await loadHistory();
+  } catch (err) {
+    console.error('Error during permanent delete', err);
+    // Try to restore
+    allData = backupData.slice();
+    filterData();
+    alert('An error occurred while deleting detections: ' + err.message);
+  }
+}
+
+function clearDetectionsSafe() {
+  if (!allData || allData.length === 0) {
+    alert('No detections to clear');
+    return;
+  }
+  // Backup current data
+  backupData = allData.slice();
+  // Clear UI only
+  allData = [];
+  filterData();
+  hideConfirmModal();
+  showUndoToast();
+  startUndoCountdown();
+}
+
+function undoClear() {
+  if (!backupData) return;
+  if (undoTimer) clearTimeout(undoTimer);
+  allData = backupData.slice();
+  backupData = null;
+  undoTimer = null;
+  filterData();
+  hideUndoToast();
+}
+
 // ================= VIEW RESULT =================
 function viewResult(item) {
   localStorage.setItem("riceguard_result", JSON.stringify(item));
@@ -151,11 +270,23 @@ async function deleteDetection(id) {
 searchInput.addEventListener("input", filterData);
 severityFilter.addEventListener("change", filterData);
 
-toggleEmpty.addEventListener("click", () => {
-  showEmpty = !showEmpty;
-  tableWrapper.classList.toggle("hidden", showEmpty);
-  emptyState.classList.toggle("hidden", !showEmpty);
-});
+// Export button
+if (exportBtn) exportBtn.addEventListener('click', exportCSV);
+
+// Clear button -> confirmation modal
+if (clearBtn) clearBtn.addEventListener('click', () => showConfirmModal());
+if (confirmDeleteBtn) confirmDeleteBtn.addEventListener('click', clearDetectionsSafe);
+if (cancelDeleteBtn) cancelDeleteBtn.addEventListener('click', () => hideConfirmModal());
+if (undoBtn) undoBtn.addEventListener('click', undoClear);
+
+// Keep the old toggle behavior if present (backwards compat)
+if (toggleEmpty) {
+  toggleEmpty.addEventListener("click", () => {
+    showEmpty = !showEmpty;
+    tableWrapper.classList.toggle("hidden", showEmpty);
+    emptyState.classList.toggle("hidden", !showEmpty);
+  });
+}
 
 // ================= INIT =================
 loadHistory();

@@ -118,3 +118,43 @@
   background: var(--background-muted);
   font-weight: 600;
 }
+
+/* history row severity backgrounds (revert-safe) */
+.history-row { transition: background-color 150ms ease; }
+.history-row { position: relative; transition: background-color 150ms ease; }
+
+/* Keep the subtle background tint, and add a visible left accent stripe */
+.history-row--none { background: var(--history-none-bg); color: var(--history-none-text); }
+.history-row--mild { background: var(--history-mild-bg); color: var(--history-mild-text); }
+.history-row--moderate { background: var(--history-moderate-bg); color: var(--history-moderate-text); }
+.history-row--severe { background: var(--history-severe-bg); color: var(--history-severe-text); }
+.history-row:hover { background: var(--history-hover-bg); }
+
+.history-row::before {
+  content: '';
+  position: absolute;
+  left: 12px;
+  top: 12px;
+  bottom: 12px;
+  width: 6px;
+  border-radius: 4px;
+  background: transparent;
+}
+.history-row--none::before { background: var(--history-none-accent); }
+.history-row--mild::before { background: var(--history-mild-accent); }
+.history-row--moderate::before { background: var(--history-moderate-accent); }
+.history-row--severe::before { background: var(--history-severe-accent); }
+
+/* Ensure content doesn't overlap the left accent */
+.history-row > td { padding-left: 30px; }
+
+/* Modal styles (confirmation) */
+.modal { position: fixed; inset: 0; display:flex; align-items:center; justify-content:center; background: rgba(0,0,0,0.35); z-index:60; }
+.modal.hidden { display:none; }
+.modal-content { background: var(--card-bg); padding:20px; border-radius:10px; width:360px; box-shadow: var(--shadow-lg); }
+.modal-content h3 { margin-top:0; }
+.modal-actions { display:flex; gap:10px; justify-content:flex-end; margin-top:16px; }
+
+/* Undo toast */
+.undo-toast { position: fixed; right: 24px; top: 20px; background: white; border:1px solid var(--border); padding: 10px 12px; border-radius:8px; box-shadow: var(--shadow-md); display:flex; gap:8px; align-items:center; z-index:70; }
+.undo-toast.hidden { display:none; }

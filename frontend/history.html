@@ -57,11 +57,11 @@
     </div>
 
     <div class="actions">
-      <button class="btn btn-outline">
+      <button id="exportBtn" class="btn btn-outline">
         ⬇ Export
       </button>
-      <button class="btn btn-outline" id="toggleEmpty">
-        Show Empty
+      <button id="clearBtn" class="btn btn-outline">
+        Clear Detections
       </button>
     </div>
   </div>
@@ -84,6 +84,24 @@
         <option value="Severe">Severe</option>
       </select>
     </div>
+
+      <!-- CONFIRMATION MODAL (hidden by default) -->
+      <div id="confirmModal" class="modal hidden">
+        <div class="modal-content">
+          <h3>Confirm delete</h3>
+          <p>Are you sure you want to delete all detections? This action can be undone.</p>
+          <div class="modal-actions">
+            <button id="confirmDeleteBtn" class="btn btn-danger">Delete</button>
+            <button id="cancelDeleteBtn" class="btn btn-outline">Cancel</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- UNDO TOAST -->
+      <div id="undoToast" class="undo-toast hidden">
+        <span>Detections deleted.</span>
+        <button id="undoBtn" class="btn btn-outline">Undo</button>
+      </div>
   </div>
 
   <!-- EMPTY STATE -->
