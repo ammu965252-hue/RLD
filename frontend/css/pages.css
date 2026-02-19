@@ -1,6 +1,6 @@
 .hero {
   padding: 80px 0;
-  background: linear-gradient(to bottom, #f0fdf4, white);
+  background: transparent; /* inherit page gradient for a smooth blend */
 }
 
 .hero-grid {

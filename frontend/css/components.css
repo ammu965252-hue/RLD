@@ -3,12 +3,14 @@
   position: sticky;
   top: 0;
   z-index: 50;
-  background: var(--accent); /* changed from semi-transparent white to green accent */
-  color: var(--text-light);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid rgba(0,0,0,0.08);
+  background: transparent; /* let body gradient show through */
+  color: var(--text-main);
+  backdrop-filter: blur(6px);
+  border-bottom: none;
+  padding: 8px 0;
 }
 
+/* PROFILE SECTION */
 .navbar-inner {
   display: flex;
   align-items: center;
@@ -16,24 +18,45 @@
   height: 64px;
 }
 
-.nav-links a {
-  font-weight: 500;
-  color: var(--text-light);
-}
-.nav-links a.active,
-.nav-links a:hover {
-  color: var(--background);
-}
-/* ensure no duplicate/errant rules below */
-
-/* PROFILE SECTION */
-.profile-section {
+.nav-links {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 28px; /* spacing between link buttons */
+  flex-wrap: wrap;
 }
 
-.user-name {
+.nav-links a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px;
+  background: rgba(220,252,231,0.9); /* soft pill-like box */
+  color: inherit; /* use white from container for good contrast */
+  border-radius: 10px;
+  font-weight: 600;
+  transition: background 0.25s ease, color 0.25s ease, transform 0.12s ease;
+}
+
+.nav-links a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: rgba(220,252,231,0.85); /* soft pill-like box */
+  color: #166534; /* darker green text for readability */
+  border-radius: 8px;
+  font-weight: 600;
+  transition: background 0.3s ease, color 0.3s ease, transform 0.12s ease;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.03);
+}
+
+.nav-links a:hover,
+.nav-links a.active {
+  background: #22c55e; /* hover green */
+  color: #ffffff;
+  transform: translateY(-1px);
+}
   font-weight: 500;
   color: var(--text-main);
   font-size: 14px;
@@ -154,3 +177,16 @@
 /* Undo toast */
 .undo-toast { position: fixed; right: 24px; top: 20px; background: white; border:1px solid var(--border); padding: 10px 12px; border-radius:8px; box-shadow: var(--shadow-md); display:flex; gap:8px; align-items:center; z-index:70; }
 .undo-toast.hidden { display:none; }
+
+/* Responsive tweaks for navbar/link buttons */
+@media (max-width: 860px) {
+  .nav-links { gap: 16px; }
+  .nav-links a { padding: 6px 12px; border-radius: 6px; font-size: 14px; }
+  .navbar-inner { height: 56px; padding: 10px 18px; width: calc(100% - 32px); }
+}
+
+@media (max-width: 520px) {
+  .nav-links { gap: 10px; }
+  .nav-links a { padding: 6px 10px; font-size: 13px; }
+  .navbar-inner { flex-wrap: wrap; align-items: center; gap: 8px; width: calc(100% - 24px); padding: 8px 12px; border-radius: 12px; }
+}
